@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { AlertBanner } from "@/components/dashboard/alert-banner";
 import { PriorityTasks } from "@/components/dashboard/priority-tasks";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { TodaySchedule } from "@/components/dashboard/today-schedule";
@@ -42,6 +43,8 @@ export default async function DashboardPage() {
       </header>
 
       <main className="-mt-4 space-y-5 px-4 sm:space-y-6 sm:px-8 lg:space-y-8">
+        <AlertBanner />
+
         <SummaryCards
           totalTasks={dashboard.summary.totalTasks}
           tasksToday={dashboard.summary.tasksToday}
