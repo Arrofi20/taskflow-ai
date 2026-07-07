@@ -53,6 +53,13 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute = pathname === "/login" || pathname === "/register";
   const isProtectedAppRoute = isProtectedRoute(pathname);
 
+  if (pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = user ? "/dashboard" : "/login";
+    url.search = "";
+    return redirectWithCookies(url, supabaseResponse);
+  }
+
   if (!user && isProtectedAppRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
