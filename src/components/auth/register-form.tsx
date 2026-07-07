@@ -7,6 +7,7 @@ import { FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   getAuthErrorMessage,
+  normalizeEmail,
   validateEmail,
   validateFullName,
   validatePassword,
@@ -49,8 +50,10 @@ export function RegisterForm() {
 
     try {
       const supabase = createClient();
+      const normalizedEmail = normalizeEmail(email);
+
       const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
+        email: normalizedEmail,
         password,
         options: {
           data: {

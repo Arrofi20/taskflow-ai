@@ -1,9 +1,19 @@
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_REGEX =
+  /^[a-z0-9](?:[a-z0-9._%+-]*[a-z0-9])?@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/;
+
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
 
 export function validateEmail(email: string): string | null {
-  const trimmed = email.trim();
-  if (!trimmed) return "Email wajib diisi.";
-  if (!EMAIL_REGEX.test(trimmed)) return "Format email tidak valid.";
+  const normalized = normalizeEmail(email);
+
+  if (!normalized) return "Email wajib diisi.";
+  if (normalized.length > 254) return "Email terlalu panjang.";
+  if (!EMAIL_REGEX.test(normalized)) {
+    return "Format email tidak valid. Contoh: nama@gmail.com";
+  }
+
   return null;
 }
 
@@ -31,6 +41,13 @@ export function getAuthErrorMessage(error: string): string {
   }
   if (normalized.includes("email not confirmed")) {
     return "Email belum diverifikasi. Periksa inbox Anda.";
+  }
+  if (
+    normalized.includes("email address is invalid") ||
+    normalized.includes("invalid email") ||
+    normalized.includes("unable to validate email")
+  ) {
+    return "Format email tidak valid. Contoh: nama@gmail.com";
   }
   if (normalized.includes("password")) {
     return "Password tidak memenuhi persyaratan.";

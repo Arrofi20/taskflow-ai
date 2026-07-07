@@ -8,6 +8,7 @@ import { isSafeRedirect } from "@/lib/auth/routes";
 import { createClient } from "@/lib/supabase/client";
 import {
   getAuthErrorMessage,
+  normalizeEmail,
   validateEmail,
   validatePassword,
 } from "@/lib/auth/validation";
@@ -48,7 +49,7 @@ export function LoginForm({ redirectTo = null }: LoginFormProps) {
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: normalizeEmail(email),
         password,
       });
 
