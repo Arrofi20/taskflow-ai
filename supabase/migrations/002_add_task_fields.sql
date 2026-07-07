@@ -1,10 +1,6 @@
 -- Add task type and estimated hours to tasks table
+-- (Now included in initial schema; kept for migration history)
 
-alter table public.tasks
-  add column if not exists task_type text not null default 'tugas'
-    check (task_type in ('tugas', 'ujian', 'proyek', 'presentasi'));
-
-alter table public.tasks
-  add column if not exists estimated_hours numeric(5, 1);
-
-create index if not exists tasks_task_type_idx on public.tasks (task_type);
+-- Migration intentionally left empty because 001_initial_schema.sql
+-- already includes jenis_tugas and estimasi_waktu.
+-- If upgrading from an older schema, run 004_fix_schema_consistency.sql.

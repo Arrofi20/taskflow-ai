@@ -46,7 +46,9 @@ export function validateTaskForm(values: TaskFormValues): TaskFormErrors {
   }
 
   if (values.deadlineDate && values.deadlineTime) {
-    const deadline = new Date(`${values.deadlineDate}T${values.deadlineTime}`);
+    const deadline = new Date(
+      `${values.deadlineDate}T${values.deadlineTime}:00+07:00`,
+    );
 
     if (Number.isNaN(deadline.getTime())) {
       errors.deadlineDate = "Deadline tidak valid.";
@@ -72,7 +74,9 @@ export function validateTaskForm(values: TaskFormValues): TaskFormErrors {
 }
 
 export function buildDueDateIso(deadlineDate: string, deadlineTime: string) {
-  return new Date(`${deadlineDate}T${deadlineTime}`).toISOString();
+  // Simpan dengan offset WIB (UTC+7) agar waktu user tetap presisi
+  // tanpa terpengaruh timezone server/browser
+  return `${deadlineDate}T${deadlineTime}:00+07:00`;
 }
 
 export function getTaskTypeLabel(taskType: TaskType) {

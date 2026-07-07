@@ -1,9 +1,14 @@
 import { BookOpen, Clock3 } from "lucide-react";
 
-import type { StudySchedule } from "@/lib/supabase/database.types";
+type ScheduleItem = {
+  id: string;
+  title: string;
+  start_time: string | null;
+  end_time: string | null;
+};
 
 type TodayScheduleProps = {
-  schedules: Pick<StudySchedule, "id" | "title" | "start_time" | "end_time">[];
+  schedules: ScheduleItem[];
 };
 
 function formatTimeRange(startTime: string | null, endTime: string | null) {

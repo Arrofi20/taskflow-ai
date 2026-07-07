@@ -2,16 +2,20 @@ import { format, parseISO } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { Flag } from "lucide-react";
 
-import type { Task } from "@/lib/supabase/database.types";
+import { getPriorityBadge } from "@/lib/tasks/priority-badge";
+import { getTaskTypeLabel } from "@/lib/tasks/validation";
 
-type PriorityTasksProps = {
-  tasks: Pick<Task, "id" | "title" | "due_date" | "priority" | "status">[];
+type PriorityTask = {
+  id: string;
+  title: string;
+  task_type: string | null;
+  deadline: string | null;
+  prioritas: number | null;
+  status: string;
 };
 
-const priorityLabels: Record<number, { label: string; className: string }> = {
-  3: { label: "Tinggi", className: "bg-red-100 text-red-700" },
-  2: { label: "Sedang", className: "bg-amber-100 text-amber-700" },
-  1: { label: "Rendah", className: "bg-slate-100 text-slate-600" },
+type PriorityTasksProps = {
+  tasks: PriorityTask[];
 };
 
 function formatDueDate(dueDate: string | null) {
@@ -37,7 +41,7 @@ export function PriorityTasks({ tasks }: PriorityTasksProps) {
       ) : (
         <ul className="space-y-3">
           {tasks.map((task) => {
-            const priority = priorityLabels[task.priority] ?? priorityLabels[1];
+            const badge = getPriorityBadge(task.prioritas, tasks.length);
 
             return (
               <li
@@ -50,13 +54,18 @@ export function PriorityTasks({ tasks }: PriorityTasksProps) {
                       {task.title}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
-                      {formatDueDate(task.due_date)}
+                      {formatDueDate(task.deadline)}
+                      {task.task_type && (
+                        <span className="ml-1.5 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                          {getTaskTypeLabel(task.task_type as import("@/lib/supabase/database.types").TaskType)}
+                        </span>
+                      )}
                     </p>
                   </div>
                   <span
-                    className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${priority.className}`}
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${badge.className}`}
                   >
-                    {priority.label}
+                    {badge.label}
                   </span>
                 </div>
               </li>

@@ -22,6 +22,7 @@ function sortTasksByPriority(tasks: TaskListItem[]) {
     if (b.prioritas == null) return -1;
 
     if (a.prioritas !== b.prioritas) {
+      // Prioritas adalah peringkat: 1 = paling tinggi (urutkan ascending)
       return a.prioritas - b.prioritas;
     }
 
@@ -36,7 +37,7 @@ export type TaskListItem = {
   due_date: string | null;
   estimated_hours: number | null;
   prioritas: number | null;
-  tingkat_kesulitan: number | null;
+  tingkat_kesulitan: string | null;
   status: TaskStatus;
 };
 
@@ -66,7 +67,6 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
         .from("tasks")
         .update({
           status: "completed",
-          updated_at: new Date().toISOString(),
         })
         .eq("id", taskId);
 
@@ -113,7 +113,9 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
             return {
               ...task,
               prioritas: result.prioritas,
-              tingkat_kesulitan: result.tingkat_kesulitan,
+              tingkat_kesulitan: result.tingkat_kesulitan != null
+                ? String(result.tingkat_kesulitan)
+                : null,
             };
           }),
         ),
@@ -189,7 +191,7 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
                       <p className="mt-1 text-xs text-slate-500">
                         {getTaskTypeLabel(task.task_type)}
                         {task.tingkat_kesulitan != null &&
-                          ` · Kesulitan ${task.tingkat_kesulitan}/10`}
+                          ` · Kesulitan ${task.tingkat_kesulitan}`}
                       </p>
 
                       <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-600">

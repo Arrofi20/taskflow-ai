@@ -24,7 +24,9 @@ export async function POST() {
 
     const { data: tasks, error: tasksError } = await supabase
       .from("tasks")
-      .select("id, title, task_type, due_date, estimated_hours, status")
+      .select(
+        "id,nama_tugas,jenis_tugas,deadline,estimasi_waktu,status,prioritas,tingkat_kesulitan",
+      )
       .eq("user_id", user.id)
       .neq("status", "completed")
       .order("created_at", { ascending: true });
@@ -46,7 +48,16 @@ export async function POST() {
       );
     }
 
-    const prioritizedTasks = await analyzeTaskPriorities(tasks);
+    const normalizedTasks = tasks.map((task) => ({
+      id: task.id,
+      title: task.nama_tugas,
+      task_type: task.jenis_tugas ?? "tugas",
+      due_date: task.deadline,
+      estimated_hours: task.estimasi_waktu,
+      status: task.status,
+    }));
+
+    const prioritizedTasks = await analyzeTaskPriorities(normalizedTasks);
 
     const updateResults = await Promise.all(
       prioritizedTasks.map((task) =>
@@ -54,8 +65,7 @@ export async function POST() {
           .from("tasks")
           .update({
             prioritas: task.prioritas,
-            tingkat_kesulitan: task.tingkat_kesulitan,
-            updated_at: new Date().toISOString(),
+            tingkat_kesulitan: String(task.tingkat_kesulitan),
           })
           .eq("id", task.id)
           .eq("user_id", user.id),

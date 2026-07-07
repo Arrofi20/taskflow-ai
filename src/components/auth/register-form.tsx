@@ -50,19 +50,23 @@ export function RegisterForm() {
 
     try {
       const supabase = createClient();
-      const normalizedEmail = normalizeEmail(email);
+      const submittedEmail = normalizeEmail(email);
+      const trimmedFullName = fullName.trim();
+
+      console.log("Register email input:", submittedEmail);
 
       const { data, error } = await supabase.auth.signUp({
-        email: normalizedEmail,
+        email: submittedEmail,
         password,
         options: {
           data: {
-            full_name: fullName.trim(),
+            full_name: trimmedFullName,
           },
         },
       });
 
       if (error) {
+        console.error("Supabase signUp error:", error);
         setFormError(getAuthErrorMessage(error.message));
         return;
       }

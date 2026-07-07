@@ -1,7 +1,8 @@
-import { addDays, endOfDay, format, startOfDay } from "date-fns";
+import { addDays, format } from "date-fns";
+import { parseISO } from "date-fns";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { Database, StudySchedule, Task } from "@/lib/supabase/database.types";
+import type { Database } from "@/lib/supabase/database.types";
 
 type AppSupabaseClient = SupabaseClient<Database>;
 
@@ -11,12 +12,108 @@ export type DashboardSummary = {
   approachingDeadline: number;
 };
 
+export type DashboardPriorityTask = {
+  id: string;
+  title: string;
+  task_type: string | null;
+  deadline: string | null;
+  prioritas: number | null;
+  status: string;
+};
+
+export type DashboardScheduleItem = {
+  id: string;
+  title: string;
+  start_time: string | null;
+  end_time: string | null;
+};
+
 export type DashboardData = {
   fullName: string;
   summary: DashboardSummary;
-  priorityTasks: Pick<Task, "id" | "title" | "due_date" | "priority" | "status">[];
-  todaySchedule: Pick<StudySchedule, "id" | "title" | "start_time" | "end_time">[];
+  priorityTasks: DashboardPriorityTask[];
+  todaySchedule: DashboardScheduleItem[];
 };
+
+function readStringValue(record: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+
+    if (typeof value === "string" && value.trim()) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+function normalizePriorityTask(record: Record<string, unknown>): DashboardPriorityTask {
+  const taskType = readStringValue(record, ["jenis_tugas", "task_type"]);
+
+  return {
+    id: String(record.id ?? ""),
+    title: readStringValue(record, ["nama_tugas", "title"]) ?? "Tugas",
+    task_type:
+      taskType && ["tugas", "ujian", "proyek", "presentasi"].includes(taskType)
+        ? taskType
+        : null,
+    deadline:
+      typeof record.deadline === "string"
+        ? record.deadline
+        : typeof record.due_date === "string"
+          ? record.due_date
+          : null,
+    prioritas:
+      typeof record.prioritas === "number"
+        ? record.prioritas
+        : typeof record.priority === "number"
+          ? record.priority
+          : null,
+    status:
+      typeof record.status === "string"
+        ? record.status
+        : "pending",
+  };
+}
+
+function normalizeScheduleItem(record: Record<string, unknown>): DashboardScheduleItem {
+  const waktuMulai = readStringValue(record, ["waktu_mulai"]);
+  const waktuSelesai = readStringValue(record, ["waktu_selesai"]);
+
+  // Supabase join mengembalikan nested object "tasks"
+  const nestedTasks = record.tasks as Record<string, unknown> | undefined;
+  const taskTitle =
+    typeof nestedTasks?.nama_tugas === "string"
+      ? nestedTasks.nama_tugas
+      : null;
+
+  let startTime: string | null = null;
+  let endTime: string | null = null;
+
+  if (waktuMulai) {
+    const parsed = parseISO(waktuMulai);
+    if (!Number.isNaN(parsed.getTime())) {
+      startTime = format(parsed, "HH:mm");
+    }
+  }
+
+  if (waktuSelesai) {
+    const parsed = parseISO(waktuSelesai);
+    if (!Number.isNaN(parsed.getTime())) {
+      endTime = format(parsed, "HH:mm");
+    }
+  }
+
+  return {
+    id: String(record.id ?? ""),
+    title:
+      taskTitle ??
+      readStringValue(record, ["title", "nama_kegiatan", "nama_tugas", "judul"]) ??
+      "Jadwal",
+    start_time: startTime,
+    end_time: endTime,
+  };
+}
 
 export async function getDashboardData(
   supabase: AppSupabaseClient,
@@ -24,24 +121,19 @@ export async function getDashboardData(
   fallbackName?: string | null,
 ): Promise<DashboardData> {
   const now = new Date();
-  const today = format(now, "yyyy-MM-dd");
-  const todayStart = startOfDay(now).toISOString();
-  const todayEnd = endOfDay(now).toISOString();
-  const deadlineEnd = endOfDay(addDays(now, 3)).toISOString();
+  const todayStr = format(now, "yyyy-MM-dd");
+  const todayStart = `${todayStr}T00:00:00+07:00`;
+  const todayEnd = `${todayStr}T23:59:59+07:00`;
+  const deadlineEndStr = format(addDays(now, 3), "yyyy-MM-dd");
+  const deadlineEnd = `${deadlineEndStr}T23:59:59+07:00`;
 
   const [
-    profileResult,
     totalTasksResult,
     tasksTodayResult,
     approachingDeadlineResult,
     priorityTasksResult,
     todayScheduleResult,
   ] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("id", userId)
-      .maybeSingle(),
     supabase
       .from("tasks")
       .select("*", { count: "exact", head: true })
@@ -52,34 +144,34 @@ export async function getDashboardData(
       .select("*", { count: "exact", head: true })
       .eq("user_id", userId)
       .neq("status", "completed")
-      .gte("due_date", todayStart)
-      .lte("due_date", todayEnd),
+      .gte("deadline", todayStart)
+      .lte("deadline", todayEnd),
     supabase
       .from("tasks")
       .select("*", { count: "exact", head: true })
       .eq("user_id", userId)
       .neq("status", "completed")
-      .not("due_date", "is", null)
-      .gte("due_date", now.toISOString())
-      .lte("due_date", deadlineEnd),
+      .gte("deadline", now.toISOString())
+      .lte("deadline", deadlineEnd),
     supabase
       .from("tasks")
-      .select("id, title, due_date, priority, status")
+      .select("id,nama_tugas,jenis_tugas,deadline,prioritas,status")
       .eq("user_id", userId)
       .neq("status", "completed")
-      .order("priority", { ascending: false })
-      .order("due_date", { ascending: true, nullsFirst: false })
+      .order("prioritas", { ascending: true, nullsFirst: true })
+      .order("deadline", { ascending: true })
       .limit(3),
     supabase
-      .from("study_schedules")
-      .select("id, title, start_time, end_time")
+      .from("schedules")
+      .select("id, waktu_mulai, waktu_selesai, tasks!inner(nama_tugas)")
       .eq("user_id", userId)
-      .eq("scheduled_date", today)
-      .order("start_time", { ascending: true, nullsFirst: false }),
+      .gte("waktu_mulai", todayStart)
+      .lte("waktu_mulai", todayEnd)
+      .order("waktu_mulai", { ascending: true })
+      .limit(3),
   ]);
 
-  const fullName =
-    profileResult.data?.full_name ?? fallbackName ?? "Pengguna";
+  const fullName = fallbackName ?? "Pengguna";
 
   return {
     fullName,
@@ -88,7 +180,11 @@ export async function getDashboardData(
       tasksToday: tasksTodayResult.count ?? 0,
       approachingDeadline: approachingDeadlineResult.count ?? 0,
     },
-    priorityTasks: priorityTasksResult.data ?? [],
-    todaySchedule: todayScheduleResult.data ?? [],
+    priorityTasks: (priorityTasksResult.data ?? []).map((record) =>
+      normalizePriorityTask(record as Record<string, unknown>),
+    ),
+    todaySchedule: (todayScheduleResult.data ?? []).map((record) =>
+      normalizeScheduleItem(record as Record<string, unknown>),
+    ),
   };
 }

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { LogoutButton } from "@/components/auth/logout-button";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function ProfilPage() {
@@ -23,6 +24,7 @@ export default async function ProfilPage() {
         <p className="mt-4 text-sm text-slate-500">Email</p>
         <p className="mt-1 font-medium text-slate-900">{data.user.email}</p>
       </div>
+      <LogoutButton />
     </main>
   );
 }

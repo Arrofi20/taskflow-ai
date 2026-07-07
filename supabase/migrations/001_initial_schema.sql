@@ -11,16 +11,19 @@ create table if not exists public.profiles (
 create table if not exists public.tasks (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users on delete cascade not null,
-  title text not null,
-  description text,
-  due_date timestamptz,
-  priority smallint not null default 1 check (priority between 1 and 3),
+  nama_tugas text not null,
+  jenis_tugas text not null default 'tugas'
+    check (jenis_tugas in ('tugas', 'ujian', 'proyek', 'presentasi')),
+  deadline timestamptz,
+  estimasi_waktu numeric(5, 1),
+  prioritas smallint check (prioritas > 0),
+  tingkat_kesulitan smallint check (tingkat_kesulitan between 1 and 10),
   status text not null default 'pending' check (status in ('pending', 'in_progress', 'completed')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
-create table if not exists public.study_schedules (
+create table if not exists public.schedules (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users on delete cascade not null,
   title text not null,
@@ -31,12 +34,12 @@ create table if not exists public.study_schedules (
 );
 
 create index if not exists tasks_user_id_idx on public.tasks (user_id);
-create index if not exists tasks_due_date_idx on public.tasks (due_date);
-create index if not exists study_schedules_user_date_idx on public.study_schedules (user_id, scheduled_date);
+create index if not exists tasks_deadline_idx on public.tasks (deadline);
+create index if not exists schedules_user_date_idx on public.schedules (user_id, scheduled_date);
 
 alter table public.profiles enable row level security;
 alter table public.tasks enable row level security;
-alter table public.study_schedules enable row level security;
+alter table public.schedules enable row level security;
 
 create policy "Users can view own profile"
   on public.profiles for select
@@ -67,19 +70,19 @@ create policy "Users can delete own tasks"
   using (auth.uid() = user_id);
 
 create policy "Users can view own schedules"
-  on public.study_schedules for select
+  on public.schedules for select
   using (auth.uid() = user_id);
 
 create policy "Users can insert own schedules"
-  on public.study_schedules for insert
+  on public.schedules for insert
   with check (auth.uid() = user_id);
 
 create policy "Users can update own schedules"
-  on public.study_schedules for update
+  on public.schedules for update
   using (auth.uid() = user_id);
 
 create policy "Users can delete own schedules"
-  on public.study_schedules for delete
+  on public.schedules for delete
   using (auth.uid() = user_id);
 
 create or replace function public.handle_new_user()

@@ -12,102 +12,104 @@ export type TaskType = "tugas" | "ujian" | "proyek" | "presentasi";
 export type Database = {
   public: {
     Tables: {
-      profiles: {
-        Row: {
-          id: string;
-          full_name: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id: string;
-          full_name?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          full_name?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
       tasks: {
         Row: {
           id: string;
           user_id: string;
-          title: string;
-          description: string | null;
-          task_type: TaskType;
-          due_date: string | null;
-          estimated_hours: number | null;
+          nama_tugas: string;
+          jenis_tugas: TaskType;
+          deadline: string;
+          estimasi_waktu: number | null;
+          tingkat_kesulitan: string | null;
           prioritas: number | null;
-          tingkat_kesulitan: number | null;
-          priority: number;
           status: TaskStatus;
           created_at: string;
-          updated_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
-          title: string;
-          description?: string | null;
-          task_type?: TaskType;
-          due_date?: string | null;
-          estimated_hours?: number | null;
+          nama_tugas: string;
+          jenis_tugas: TaskType;
+          deadline: string;
+          estimasi_waktu?: number | null;
+          tingkat_kesulitan?: string | null;
           prioritas?: number | null;
-          tingkat_kesulitan?: number | null;
-          priority?: number;
           status?: TaskStatus;
           created_at?: string;
-          updated_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
-          title?: string;
-          description?: string | null;
-          task_type?: TaskType;
-          due_date?: string | null;
-          estimated_hours?: number | null;
+          nama_tugas?: string;
+          jenis_tugas?: TaskType;
+          deadline?: string;
+          estimasi_waktu?: number | null;
+          tingkat_kesulitan?: string | null;
           prioritas?: number | null;
-          tingkat_kesulitan?: number | null;
-          priority?: number;
           status?: TaskStatus;
           created_at?: string;
-          updated_at?: string;
         };
         Relationships: [];
       };
-      study_schedules: {
+      schedules: {
         Row: {
           id: string;
           user_id: string;
-          title: string;
-          scheduled_date: string;
-          start_time: string | null;
-          end_time: string | null;
+          task_id: string;
+          waktu_mulai: string;
+          waktu_selesai: string;
+          rekomendasi_ai: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
-          title: string;
-          scheduled_date: string;
-          start_time?: string | null;
-          end_time?: string | null;
+          task_id: string;
+          waktu_mulai: string;
+          waktu_selesai: string;
+          rekomendasi_ai?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
-          title?: string;
-          scheduled_date?: string;
-          start_time?: string | null;
-          end_time?: string | null;
+          task_id?: string;
+          waktu_mulai?: string;
+          waktu_selesai?: string;
+          rekomendasi_ai?: string | null;
           created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "schedules_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "tasks";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      free_time: {
+        Row: {
+          id: string;
+          user_id: string;
+          hari: string;
+          jam_mulai: string;
+          jam_selesai: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          hari: string;
+          jam_mulai: string;
+          jam_selesai: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          hari?: string;
+          jam_mulai?: string;
+          jam_selesai?: string;
         };
         Relationships: [];
       };
@@ -119,6 +121,6 @@ export type Database = {
   };
 };
 
-export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type Task = Database["public"]["Tables"]["tasks"]["Row"];
-export type StudySchedule = Database["public"]["Tables"]["study_schedules"]["Row"];
+export type ScheduleItem = Database["public"]["Tables"]["schedules"]["Row"];
+export type FreeTimeItem = Database["public"]["Tables"]["free_time"]["Row"];

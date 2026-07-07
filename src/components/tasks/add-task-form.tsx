@@ -68,11 +68,12 @@ export function AddTaskForm() {
 
       const { error } = await supabase.from("tasks").insert({
         user_id: user.id,
-        title: values.title.trim(),
-        task_type: values.taskType as TaskType,
-        due_date: buildDueDateIso(values.deadlineDate, values.deadlineTime),
-        estimated_hours: Number(values.estimatedHours),
+        nama_tugas: values.title.trim(),
+        jenis_tugas: values.taskType || "tugas",
+        deadline: buildDueDateIso(values.deadlineDate, values.deadlineTime),
+        estimasi_waktu: Number(values.estimatedHours),
         status: "pending",
+        created_at: new Date().toISOString(),
       });
 
       if (error) {
