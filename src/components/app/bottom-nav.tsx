@@ -21,7 +21,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)]">
-      <div className="mx-auto flex max-w-lg items-stretch justify-around px-2">
+      <div className="mx-auto flex w-full max-w-lg items-stretch justify-around px-2 sm:max-w-2xl sm:px-4 lg:max-w-5xl xl:max-w-6xl">
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive =
             pathname === href || pathname.startsWith(`${href}/`);
