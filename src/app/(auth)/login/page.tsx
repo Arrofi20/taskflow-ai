@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 
 import { LoginForm } from "@/components/auth/login-form";
 
@@ -8,10 +7,12 @@ export const metadata: Metadata = {
   description: "Masuk ke akun TaskFlow AI Anda",
 };
 
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<div className="rounded-2xl bg-white p-8 text-center text-slate-600">Memuat...</div>}>
-      <LoginForm />
-    </Suspense>
-  );
+type LoginPageProps = {
+  searchParams: Promise<{ redirect?: string }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams;
+
+  return <LoginForm redirectTo={params.redirect ?? null} />;
 }

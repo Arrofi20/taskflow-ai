@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 import { isSafeRedirect } from "@/lib/auth/routes";
@@ -12,10 +12,12 @@ import {
   validatePassword,
 } from "@/lib/auth/validation";
 
-export function LoginForm() {
+type LoginFormProps = {
+  redirectTo?: string | null;
+};
+
+export function LoginForm({ redirectTo = null }: LoginFormProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{

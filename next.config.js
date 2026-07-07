@@ -1,11 +1,13 @@
 const path = require("path");
 
+const projectRoot = path.resolve(__dirname);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   turbopack: {
-    root: path.join(__dirname),
+    root: projectRoot,
   },
-  outputFileTracingRoot: path.join(__dirname),
+  outputFileTracingRoot: projectRoot,
 };
 
 if (process.env.NODE_ENV === "production") {
