@@ -113,6 +113,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      alerts: {
+        Row: {
+          id: string;
+          user_id: string;
+          task_id: string | null;
+          title: string;
+          message: string;
+          severity: string;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          task_id?: string | null;
+          title: string;
+          message: string;
+          severity?: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          task_id?: string | null;
+          title?: string;
+          message?: string;
+          severity?: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -124,3 +160,4 @@ export type Database = {
 export type Task = Database["public"]["Tables"]["tasks"]["Row"];
 export type ScheduleItem = Database["public"]["Tables"]["schedules"]["Row"];
 export type FreeTimeItem = Database["public"]["Tables"]["free_time"]["Row"];
+export type AlertItem = Database["public"]["Tables"]["alerts"]["Row"];

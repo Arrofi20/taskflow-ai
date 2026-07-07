@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import type { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 function formatDeadlineLabel(deadline: string) {
@@ -136,7 +137,7 @@ export async function POST() {
       return NextResponse.json({ success: true, alerts: [] });
     }
 
-    const insertPayload = alerts.map((alert) => ({
+    const insertPayload: Database["public"]["Tables"]["alerts"]["Insert"][] = alerts.map((alert) => ({
       user_id: user.id,
       task_id: relevantTasks[0]?.id ?? null,
       title: String(alert.title ?? "Peringatan"),
