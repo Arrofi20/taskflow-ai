@@ -20,7 +20,7 @@ export type Database = {
           jenis_tugas: TaskType;
           deadline: string;
           estimasi_waktu: number | null;
-          tingkat_kesulitan: string | null;
+          tingkat_kesulitan: number | null;
           prioritas: number | null;
           status: TaskStatus;
           created_at: string;
@@ -32,7 +32,7 @@ export type Database = {
           jenis_tugas: TaskType;
           deadline: string;
           estimasi_waktu?: number | null;
-          tingkat_kesulitan?: string | null;
+          tingkat_kesulitan?: number | null;
           prioritas?: number | null;
           status?: TaskStatus;
           created_at?: string;
@@ -44,7 +44,7 @@ export type Database = {
           jenis_tugas?: TaskType;
           deadline?: string;
           estimasi_waktu?: number | null;
-          tingkat_kesulitan?: string | null;
+          tingkat_kesulitan?: number | null;
           prioritas?: number | null;
           status?: TaskStatus;
           created_at?: string;

@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { ArrowLeft, Clock3, Plus, Trash2 } from 'lucide-react';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Clock3, Plus, Trash2 } from "lucide-react";
 
-import { createClient } from '@/lib/supabase/client';
-import type { FreeTimeItem } from '@/lib/supabase/database.types';
+import { createClient } from "@/lib/supabase/client";
+import type { FreeTimeItem } from "@/lib/supabase/database.types";
 
 const DAYS = [
-  { value: 'Senin', label: 'Senin' },
-  { value: 'Selasa', label: 'Selasa' },
-  { value: 'Rabu', label: 'Rabu' },
-  { value: 'Kamis', label: 'Kamis' },
-  { value: 'Jumat', label: 'Jumat' },
-  { value: 'Sabtu', label: 'Sabtu' },
-  { value: 'Minggu', label: 'Minggu' },
+  { value: "Senin", label: "Senin" },
+  { value: "Selasa", label: "Selasa" },
+  { value: "Rabu", label: "Rabu" },
+  { value: "Kamis", label: "Kamis" },
+  { value: "Jumat", label: "Jumat" },
+  { value: "Sabtu", label: "Sabtu" },
+  { value: "Minggu", label: "Minggu" },
 ] as const;
 
 type SlotInput = {
@@ -29,8 +29,8 @@ function createEmptySlot(): SlotInput {
   return {
     id: crypto.randomUUID(),
     days: [],
-    startTime: '',
-    endTime: '',
+    startTime: "",
+    endTime: "",
   };
 }
 
@@ -56,22 +56,22 @@ export default function WaktuKosongPage() {
       }
 
       if (!user) {
-        router.replace('/login');
+        router.replace("/login");
         return;
       }
 
       const { data, error } = await supabase
-        .from('free_time')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('hari', { ascending: true });
+        .from("free_time")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("hari", { ascending: true });
 
       if (!mounted) {
         return;
       }
 
       if (error) {
-        setMessage('Gagal memuat waktu kosong.');
+        setMessage("Gagal memuat waktu kosong.");
         setLoading(false);
         return;
       }
@@ -132,7 +132,7 @@ export default function WaktuKosongPage() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      router.replace('/login');
+      router.replace("/login");
       return;
     }
 
@@ -142,13 +142,13 @@ export default function WaktuKosongPage() {
     );
 
     if (invalidSlots.length > 0) {
-      setMessage('Pilih hari, jam mulai, dan jam selesai untuk setiap slot.');
+      setMessage("Pilih hari, jam mulai, dan jam selesai untuk setiap slot.");
       return;
     }
 
     for (const slot of slots) {
       if (slot.startTime >= slot.endTime) {
-        setMessage('Jam selesai harus lebih besar dari jam mulai.');
+        setMessage("Jam selesai harus lebih besar dari jam mulai.");
         return;
       }
 
@@ -164,30 +164,30 @@ export default function WaktuKosongPage() {
 
     setSaving(true);
 
-    const { data: inserted, error } = await supabase.from('free_time').insert(payload).select('*');
+    const { data: inserted, error } = await supabase.from("free_time").insert(payload).select("*");
 
     setSaving(false);
 
     if (error) {
-      setMessage('Gagal menyimpan waktu kosong.');
+      setMessage("Gagal menyimpan waktu kosong.");
       return;
     }
 
     setItems((current) => [...(inserted ?? []), ...current]);
     setSlots([createEmptySlot()]);
-    setMessage('Waktu kosong berhasil disimpan.');
+    setMessage("Waktu kosong berhasil disimpan.");
   }
 
   async function handleDelete(id: string) {
-    const { error } = await supabase.from('free_time').delete().eq('id', id);
+    const { error } = await supabase.from("free_time").delete().eq("id", id);
 
     if (error) {
-      setMessage('Gagal menghapus slot.');
+      setMessage("Gagal menghapus slot.");
       return;
     }
 
     setItems((current) => current.filter((item) => item.id !== id));
-    setMessage('Slot berhasil dihapus.');
+    setMessage("Slot berhasil dihapus.");
   }
 
   return (
@@ -242,8 +242,8 @@ export default function WaktuKosongPage() {
                           key={day.value}
                           className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm ${
                             checked
-                              ? 'border-[#028090] bg-[#028090]/10 text-[#028090]'
-                              : 'border-slate-200 bg-white text-slate-600'
+                              ? "border-[#028090] bg-[#028090]/10 text-[#028090]"
+                              : "border-slate-200 bg-white text-slate-600"
                           }`}
                         >
                           <input
@@ -299,7 +299,7 @@ export default function WaktuKosongPage() {
               disabled={saving}
               className="w-full rounded-2xl bg-[#1E2761] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#17204f] disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {saving ? 'Menyimpan...' : 'Simpan waktu kosong'}
+              {saving ? "Menyimpan..." : "Simpan waktu kosong"}
             </button>
           </form>
 

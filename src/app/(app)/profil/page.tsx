@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronRight, Clock3, Edit3, LogOut, Mail, ShieldCheck } from "lucide-react";
+import { ChevronRight, Clock3, Edit3, Mail, ShieldCheck } from "lucide-react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { createClient } from "@/lib/supabase/client";

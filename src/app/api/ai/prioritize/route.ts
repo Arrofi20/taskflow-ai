@@ -65,7 +65,7 @@ export async function POST() {
           .from("tasks")
           .update({
             prioritas: task.prioritas,
-            tingkat_kesulitan: String(task.tingkat_kesulitan),
+            tingkat_kesulitan: task.tingkat_kesulitan,
           })
           .eq("id", task.id)
           .eq("user_id", user.id),

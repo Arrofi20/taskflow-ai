@@ -80,7 +80,7 @@ function formatTimeRange(startTime: string | null, endTime: string | null) {
 export default async function JadwalPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ date?: string }>;
+  searchParams: Promise<{ date?: string }>;
 }) {
   const supabase = await createClient();
   const { data: authData } = await supabase.auth.getUser();
@@ -250,7 +250,7 @@ export default async function JadwalPage({
             <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center text-sm text-slate-600">
               <p className="mb-1">Belum ada jadwal untuk tanggal ini.</p>
               <p className="text-xs text-slate-400">
-                Tekan "Regenerasi AI" untuk membuat jadwal otomatis dari tugas aktif Anda.
+                Tekan &ldquo;Regenerasi AI&rdquo; untuk membuat jadwal otomatis dari tugas aktif Anda.
               </p>
             </div>
           )}

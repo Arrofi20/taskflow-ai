@@ -11,3 +11,21 @@ create table if not exists public.alerts (
 );
 
 create index if not exists alerts_user_created_idx on public.alerts (user_id, created_at desc);
+
+alter table public.alerts enable row level security;
+
+create policy "Users can view own alerts"
+  on public.alerts for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own alerts"
+  on public.alerts for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update own alerts"
+  on public.alerts for update
+  using (auth.uid() = user_id);
+
+create policy "Users can delete own alerts"
+  on public.alerts for delete
+  using (auth.uid() = user_id);

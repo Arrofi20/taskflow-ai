@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const path = require("path");
 
 const projectRoot = path.resolve(__dirname);
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+let nextConfig = {
   turbopack: {
     root: projectRoot,
   },
@@ -11,14 +12,11 @@ const nextConfig = {
   devIndicators: false,
 };
 
-if (process.env.NODE_ENV === "production") {
-  const withPWA = require("next-pwa")({
-    dest: "public",
-    register: true,
-    skipWaiting: true,
-  });
+const withPWA = require("next-pwa")({
+  dest: "public",
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV !== "production",
+});
 
-  module.exports = withPWA(nextConfig);
-} else {
-  module.exports = nextConfig;
-}
+module.exports = withPWA(nextConfig);

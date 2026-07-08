@@ -26,16 +26,16 @@ create table if not exists public.tasks (
 create table if not exists public.schedules (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users on delete cascade not null,
-  title text not null,
-  scheduled_date date not null,
-  start_time time,
-  end_time time,
+  task_id uuid references public.tasks on delete cascade not null,
+  waktu_mulai timestamptz not null,
+  waktu_selesai timestamptz not null,
+  rekomendasi_ai text,
   created_at timestamptz not null default now()
 );
 
 create index if not exists tasks_user_id_idx on public.tasks (user_id);
 create index if not exists tasks_deadline_idx on public.tasks (deadline);
-create index if not exists schedules_user_date_idx on public.schedules (user_id, scheduled_date);
+create index if not exists schedules_user_date_idx on public.schedules (user_id, waktu_mulai);
 
 alter table public.profiles enable row level security;
 alter table public.tasks enable row level security;

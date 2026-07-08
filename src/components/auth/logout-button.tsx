@@ -1,5 +1,6 @@
 "use client";
 
+import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -21,9 +22,10 @@ export function LogoutButton() {
     <button
       onClick={handleLogout}
       disabled={isLoading}
-      className="mt-6 w-full rounded-xl border border-red-200 bg-red-50 px-4 py-3.5 text-base font-semibold text-red-700 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-not-allowed disabled:opacity-60"
+      className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3.5 text-base font-semibold text-red-700 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {isLoading ? "Memproses..." : "Keluar"}
+      <LogOut size={18} />
+      {isLoading ? "Memproses..." : "Keluar Akun"}
     </button>
   );
 }
