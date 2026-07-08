@@ -8,6 +8,7 @@ const nextConfig = {
     root: projectRoot,
   },
   outputFileTracingRoot: projectRoot,
+  devIndicators: false,
 };
 
 if (process.env.NODE_ENV === "production") {
