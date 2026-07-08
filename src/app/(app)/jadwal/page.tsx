@@ -5,6 +5,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AIGenerateButton } from "@/components/schedule/ai-generate-button";
+import { CalendarFilter } from "@/components/schedule/calendar-filter";
 import { createClient } from "@/lib/supabase/server";
 import { getTaskTypeLabel } from "@/lib/tasks/validation";
 
@@ -165,9 +166,7 @@ export default async function JadwalPage({
           <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
             {format(selectedDateObject, "EEEE", { locale: localeId })}
           </p>
-          <p className="text-sm font-semibold text-[#1E2761]">
-            {format(selectedDateObject, "d MMM yyyy", { locale: localeId })}
-          </p>
+          <CalendarFilter selectedDate={selectedDate} />
         </div>
 
         <Link

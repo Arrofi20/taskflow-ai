@@ -7,6 +7,7 @@ import { FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   getAuthErrorMessage,
+  getSiteUrl,
   normalizeEmail,
   validateEmail,
   validateFullName,
@@ -62,6 +63,7 @@ export function RegisterForm() {
           data: {
             full_name: trimmedFullName,
           },
+          emailRedirectTo: `${getSiteUrl()}/login`,
         },
       });
 

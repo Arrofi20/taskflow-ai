@@ -1,5 +1,5 @@
 export type PriorityBadge = {
-  label: "Tinggi" | "Sedang" | "Rendah" | "Belum AI";
+  label: "Tinggi" | "Sedang" | "Rendah" | "Belum Dikategorikan AI";
   className: string;
 };
 
@@ -9,7 +9,7 @@ export function getPriorityBadge(
 ): PriorityBadge {
   if (prioritas == null || totalTasks === 0) {
     return {
-      label: "Belum AI",
+      label: "Belum Dikategorikan AI",
       className: "bg-slate-100 text-slate-600",
     };
   }

@@ -29,6 +29,13 @@ export function validateFullName(fullName: string): string | null {
   return null;
 }
 
+export function getSiteUrl(): string {
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+}
+
 export function getAuthErrorMessage(error: string): string {
   const normalized = error.toLowerCase();
 
