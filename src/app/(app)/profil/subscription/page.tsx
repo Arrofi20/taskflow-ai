@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Check, Crown, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Crown, Sparkles, Building2 } from "lucide-react";
 
 const features = {
   free: [
@@ -16,6 +16,13 @@ const features = {
     "Analisis produktivitas",
     "Rekomendasi jadwal lebih personal",
     "Prioritas AI yang lebih detail",
+  ],
+  b2b: [
+    "Dashboard dosen/pengajar",
+    "Monitoring tugas mahasiswa",
+    "Laporan produktivitas kelas",
+    "Manajemen banyak pengguna",
+    "Support prioritas",
   ],
 };
 
@@ -93,7 +100,7 @@ export default function SubscriptionPage() {
               <p className="text-sm text-slate-500">Harga mulai</p>
               <p className="mt-1 text-2xl font-bold text-[#1E2761]">Rp 29.000</p>
               <p className="text-sm text-slate-500">per bulan</p>
-              <p className="mt-2 text-sm text-[#028090] font-medium">atau Rp 249.000 / tahun</p>
+              <p className="mt-2 text-sm font-medium text-[#028090]">atau Rp 249.000 / tahun</p>
             </div>
 
             <button
@@ -105,6 +112,38 @@ export default function SubscriptionPage() {
             </button>
           </section>
         </div>
+
+        <section className="rounded-3xl border border-[#1E2761]/10 bg-[#1E2761]/5 p-5 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Building2 size={20} className="text-[#1E2761]" />
+            <p className="text-lg font-semibold text-[#1E2761]">B2B Licensing</p>
+          </div>
+          <p className="mt-1 text-sm text-slate-600">
+            Solusi untuk kampus, bimbel, dan lembaga pendidikan.
+          </p>
+
+          <div className="mt-4 space-y-2">
+            {features.b2b.map((item) => (
+              <div key={item} className="flex items-start gap-2 rounded-xl bg-white px-3 py-2 text-sm text-slate-700">
+                <Check size={16} className="mt-0.5 text-[#028090]" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 rounded-2xl bg-white p-3">
+            <p className="text-sm text-slate-500">Harga</p>
+            <p className="mt-1 text-2xl font-bold text-[#1E2761]">Rp 5.000.000</p>
+            <p className="text-sm text-slate-500">/ kampus / tahun</p>
+          </div>
+
+          <Link
+            href="/b2b"
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1E2761] px-4 py-3 text-sm font-semibold text-white shadow-sm"
+          >
+            Hubungi Kami
+          </Link>
+        </section>
       </div>
     </main>
   );

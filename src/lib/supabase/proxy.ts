@@ -16,6 +16,23 @@ function getSupabaseEnv() {
   return { url, anonKey };
 }
 
+const PREMIUM_ROUTES = ["/analisis", "/kalender"];
+
+function isPremiumRoute(pathname: string): boolean {
+  return PREMIUM_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
+}
+
+function getIsPremiumFromUser(user: { user_metadata?: Record<string, unknown> } | null): boolean {
+  if (!user) return false;
+  const meta = user.user_metadata;
+  if (meta && typeof meta.is_premium === "boolean") return meta.is_premium;
+  if (meta && typeof meta.plan === "string") return meta.plan.toLowerCase() === "premium";
+  if (meta && typeof meta.subscription === "string") return meta.subscription.toLowerCase() === "premium";
+  return false;
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -51,11 +68,14 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute = pathname === "/login" || pathname === "/register";
   const isProtectedAppRoute = isProtectedRoute(pathname);
 
-  if (pathname === "/") {
-    const url = request.nextUrl.clone();
-    url.pathname = user ? "/dashboard" : "/login";
-    url.search = "";
-    return redirectWithCookies(url, supabaseResponse);
+  // Premium route guard
+  if (isPremiumRoute(pathname)) {
+    const isPremium = getIsPremiumFromUser(user);
+    if (!isPremium) {
+      const upgradeUrl = request.nextUrl.clone();
+      upgradeUrl.pathname = "/profil/subscription";
+      return redirectWithCookies(upgradeUrl, supabaseResponse);
+    }
   }
 
   if (!user && isProtectedAppRoute) {

@@ -62,6 +62,9 @@ export function RegisterForm() {
         options: {
           data: {
             full_name: trimmedFullName,
+            is_premium: false,
+            plan: "free",
+            onboarding_completed: false,
           },
           emailRedirectTo: `${getSiteUrl()}/login`,
         },
@@ -74,7 +77,7 @@ export function RegisterForm() {
       }
 
       if (data.session) {
-        router.push("/dashboard");
+        router.push("/onboarding");
         router.refresh();
         return;
       }

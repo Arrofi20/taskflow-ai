@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { BottomNav } from "@/components/app/bottom-nav";
+import { NotificationProvider } from "@/components/app/notification-provider";
 import { createClient } from "@/lib/supabase/server";
 
 const appShellClassName =
@@ -19,9 +20,11 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-slate-50">
-      <div className={appShellClassName}>{children}</div>
-      <BottomNav />
-    </div>
+    <NotificationProvider>
+      <div className="flex min-h-full flex-1 flex-col bg-slate-50">
+        <div className={appShellClassName}>{children}</div>
+        <BottomNav />
+      </div>
+    </NotificationProvider>
   );
 }

@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Crown } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -32,6 +32,53 @@ export function AddTaskForm() {
   const [fieldErrors, setFieldErrors] = useState<TaskFormErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [taskLimit, setTaskLimit] = useState<{
+    current: number;
+    limit: number;
+    blocked: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    async function checkLimit() {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("users")
+        .select("is_premium")
+        .eq("id", user.id)
+        .single();
+
+      let isPremium = false;
+      if (profile?.is_premium != null) {
+        isPremium = profile.is_premium;
+      } else {
+        const meta = user.user_metadata;
+        if (meta && typeof meta.is_premium === "boolean")
+          isPremium = meta.is_premium;
+        else if (meta && typeof meta.plan === "string")
+          isPremium = meta.plan.toLowerCase() === "premium";
+        else if (meta && typeof meta.subscription === "string")
+          isPremium = meta.subscription.toLowerCase() === "premium";
+      }
+
+      if (isPremium) return;
+
+      const { count } = await supabase
+        .from("tasks")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .neq("status", "completed");
+
+      const current = count ?? 0;
+      setTaskLimit({ current, limit: 5, blocked: current >= 5 });
+    }
+
+    checkLimit();
+  }, []);
 
   function updateField<K extends keyof TaskFormValues>(
     field: K,
@@ -44,6 +91,13 @@ export function AddTaskForm() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError(null);
+
+    if (taskLimit?.blocked) {
+      setFormError(
+        "Anda sudah mencapai batas 5 tugas aktif. Upgrade ke Premium untuk unlimited tugas.",
+      );
+      return;
+    }
 
     const errors = validateTaskForm(values);
     if (Object.keys(errors).length > 0) {
@@ -107,6 +161,25 @@ export function AddTaskForm() {
             Isi detail tugas untuk melacak deadline dan estimasi waktu.
           </p>
         </div>
+
+        {taskLimit?.blocked && (
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <div className="flex items-center gap-2 font-semibold">
+              <Crown size={16} />
+              Batas tugas aktif tercapai
+            </div>
+            <p className="mt-1">
+              Anda sudah memiliki {taskLimit.current} tugas aktif (maksimal{" "}
+              {taskLimit.limit}).
+            </p>
+            <Link
+              href="/profil/subscription"
+              className="mt-2 inline-block rounded-lg bg-[#1E2761] px-3 py-1.5 text-xs font-semibold text-white"
+            >
+              Upgrade ke Premium
+            </Link>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {formError && (
@@ -263,7 +336,7 @@ export function AddTaskForm() {
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || taskLimit?.blocked}
             className="w-full rounded-xl bg-[#1E2761] px-4 py-3.5 text-base font-semibold text-white transition hover:bg-[#028090] focus:outline-none focus:ring-2 focus:ring-[#028090]/40 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLoading ? "Menyimpan..." : "Simpan Tugas"}

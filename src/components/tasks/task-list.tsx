@@ -2,10 +2,10 @@
 
 import { format, parseISO } from "date-fns";
 import { id as localeId } from "date-fns/locale";
-import { CheckCircle2, Clock3, Plus, Sparkles } from "lucide-react";
+import { CheckCircle2, Clock3, Crown, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
 import type { TaskStatus, TaskType } from "@/lib/supabase/database.types";
@@ -22,7 +22,6 @@ function sortTasksByPriority(tasks: TaskListItem[]) {
     if (b.prioritas == null) return -1;
 
     if (a.prioritas !== b.prioritas) {
-      // Prioritas adalah peringkat: 1 = paling tinggi (urutkan ascending)
       return a.prioritas - b.prioritas;
     }
 
@@ -52,6 +51,31 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [isPrioritizing, setIsPrioritizing] = useState(false);
+  const [isPremium, setIsPremium] = useState<boolean | null>(null);
+  const [activeCount, setActiveCount] = useState(0);
+
+  useEffect(() => {
+    setTasks(initialTasks);
+    setActiveCount(initialTasks.filter((t) => t.status !== "completed").length);
+  }, [initialTasks]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    async function loadPremium() {
+      const { data: { session } } = await supabase.auth.getSession();
+      const meta = session?.user.user_metadata;
+      let premium = false;
+      if (meta && typeof meta.is_premium === "boolean") {
+        premium = meta.is_premium;
+      } else if (meta && typeof meta.plan === "string") {
+        premium = meta.plan.toLowerCase() === "premium";
+      } else if (meta && typeof meta.subscription === "string") {
+        premium = meta.subscription.toLowerCase() === "premium";
+      }
+      setIsPremium(premium);
+    }
+    loadPremium();
+  }, []);
 
   const activeTasks = sortTasksByPriority(
     tasks.filter((task) => task.status !== "completed"),
@@ -67,6 +91,7 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
         .from("tasks")
         .update({
           status: "completed",
+          completed_at: new Date().toISOString(),
         })
         .eq("id", taskId);
 
@@ -80,6 +105,7 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
           task.id === taskId ? { ...task, status: "completed" } : task,
         ),
       );
+      setActiveCount((c) => Math.max(0, c - 1));
       router.refresh();
     } catch {
       setActionError("Gagal menandai tugas selesai.");
@@ -113,9 +139,10 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
             return {
               ...task,
               prioritas: result.prioritas,
-              tingkat_kesulitan: result.tingkat_kesulitan != null
-                ? String(result.tingkat_kesulitan)
-                : null,
+              tingkat_kesulitan:
+                result.tingkat_kesulitan != null
+                  ? String(result.tingkat_kesulitan)
+                  : null,
             };
           }),
         ),
@@ -127,6 +154,8 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
       setIsPrioritizing(false);
     }
   }
+
+  const showUpgradeBanner = isPremium === false && activeCount >= 5;
 
   return (
     <>
@@ -151,6 +180,25 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
         {(fetchError || actionError) && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {fetchError ?? actionError}
+          </div>
+        )}
+
+        {showUpgradeBanner && (
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <div className="flex items-center gap-2 font-semibold">
+              <Crown size={16} />
+              Batas tugas aktif tercapai
+            </div>
+            <p className="mt-1">
+              Anda telah mencapai batas maksimal 5 tugas aktif. Selesaikan
+              beberapa tugas atau upgrade ke Premium untuk unlimited tugas.
+            </p>
+            <Link
+              href="/profil/subscription"
+              className="mt-2 inline-block rounded-lg bg-[#1E2761] px-3 py-1.5 text-xs font-semibold text-white"
+            >
+              Upgrade ke Premium
+            </Link>
           </div>
         )}
 

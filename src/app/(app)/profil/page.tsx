@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronRight, Clock3, Edit3, Mail, ShieldCheck } from "lucide-react";
+import { ChevronRight, Clock3, Edit3, Mail, ShieldCheck, Gift, Zap } from "lucide-react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { createClient } from "@/lib/supabase/client";
@@ -14,6 +14,7 @@ export default function ProfilPage() {
   const [fullName, setFullName] = useState("Pengguna");
   const [email, setEmail] = useState("");
   const [plan, setPlan] = useState("Free");
+  const [isPremium, setIsPremium] = useState(false);
   const [draftName, setDraftName] = useState("");
   const [isEditingName, setIsEditingName] = useState(false);
   const [savingName, setSavingName] = useState(false);
@@ -39,17 +40,34 @@ export default function ProfilPage() {
 
       const name =
         (user.user_metadata?.full_name as string | undefined) ?? "Pengguna";
-      const savedPlan =
-        ((user.user_metadata?.plan as string | undefined) ??
-          (user.user_metadata?.subscription as string | undefined) ??
-          "free")
-          .toLowerCase();
 
-      setFullName(name);
-      setDraftName(name);
-      setEmail(user.email ?? "");
-      setPlan(savedPlan === "premium" ? "Premium" : "Free");
-      setLoading(false);
+      // Cek premium dari tabel users dulu, lalu fallback ke metadata
+      const { data: profile } = await supabase
+        .from("users")
+        .select("is_premium")
+        .eq("id", user.id)
+        .single();
+
+      let premium = false;
+      if (profile?.is_premium != null) {
+        premium = profile.is_premium;
+      } else {
+        const savedPlan =
+          ((user.user_metadata?.plan as string | undefined) ??
+            (user.user_metadata?.subscription as string | undefined) ??
+            "free")
+            .toLowerCase();
+        premium = savedPlan === "premium";
+      }
+
+      if (mounted) {
+        setFullName(name);
+        setDraftName(name);
+        setEmail(user.email ?? "");
+        setIsPremium(premium);
+        setPlan(premium ? "Premium" : "Free");
+        setLoading(false);
+      }
     }
 
     loadProfile();
@@ -100,12 +118,12 @@ export default function ProfilPage() {
             </div>
             <div
               className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                plan === "Premium"
-                  ? "bg-emerald-400/20 text-emerald-100"
+                isPremium
+                  ? "bg-amber-400/20 text-amber-100"
                   : "bg-white/15 text-white"
               }`}
             >
-              {plan}
+              {isPremium ? "PREMIUM" : "FREE"}
             </div>
           </div>
 
@@ -210,11 +228,29 @@ export default function ProfilPage() {
           >
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-[#1E2761]/10 p-2 text-[#1E2761]">
-                <ShieldCheck size={18} />
+                <Zap size={18} />
               </div>
               <div>
                 <p className="font-semibold text-[#1E2761]">Subscription</p>
-                <p className="text-sm text-slate-500">Lihat paket premium</p>
+                <p className="text-sm text-slate-500">
+                  {isPremium ? "Kelola paket premium" : "Lihat paket premium"}
+                </p>
+              </div>
+            </div>
+            <ChevronRight size={18} className="text-slate-400" />
+          </Link>
+
+          <Link
+            href="/referral"
+            className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
+          >
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-amber-500/10 p-2 text-amber-600">
+                <Gift size={18} />
+              </div>
+              <div>
+                <p className="font-semibold text-[#1E2761]">Referral</p>
+                <p className="text-sm text-slate-500">Ajak teman dan dapatkan premium gratis</p>
               </div>
             </div>
             <ChevronRight size={18} className="text-slate-400" />

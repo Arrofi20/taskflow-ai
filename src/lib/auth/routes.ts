@@ -3,6 +3,9 @@ export const PROTECTED_ROUTES = [
   "/tugas",
   "/jadwal",
   "/profil",
+  "/analisis",
+  "/kalender",
+  "/referral",
 ] as const;
 
 export function isProtectedRoute(pathname: string): boolean {
