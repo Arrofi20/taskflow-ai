@@ -179,7 +179,7 @@ export default function KalenderPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-5 text-slate-800">
+    <main className="min-h-screen px-4 py-5 text-slate-800">
       <div className="mx-auto flex max-w-5xl flex-col gap-4">
         <div className="flex items-center justify-between">
           <div>
@@ -197,12 +197,12 @@ export default function KalenderPage() {
           </button>
         </div>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="card-vibrant rounded-3xl p-4">
           <div className="mb-4 flex items-center justify-between">
             <button
               type="button"
               onClick={() => setCurrentMonth((m) => subMonths(m, 1))}
-              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -212,13 +212,13 @@ export default function KalenderPage() {
             <button
               type="button"
               onClick={() => setCurrentMonth((m) => addMonths(m, 1))}
-              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-slate-500">
+          <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-slate-600">
             {weekDays.map((d) => (
               <div key={d} className="py-2">
                 {d}
@@ -249,7 +249,7 @@ export default function KalenderPage() {
                   onClick={() => setSelectedDate(day)}
                   className={`relative flex h-10 flex-col items-center justify-center rounded-xl text-sm transition sm:h-12 ${
                     isSelected
-                      ? "bg-[#1E2761] text-white"
+                      ? "bg-[#1E2761] text-white shadow-sm"
                       : isToday
                         ? "bg-[#028090]/10 font-bold text-[#028090]"
                         : "text-slate-700 hover:bg-slate-50"
@@ -259,7 +259,7 @@ export default function KalenderPage() {
                   <div className="mt-0.5 flex gap-0.5">
                     {hasDeadline && (
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-red-500"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#ff6b6b]"}`}
                       />
                     )}
                     {hasSchedule && (
@@ -275,7 +275,7 @@ export default function KalenderPage() {
 
           <div className="mt-4 flex items-center gap-4 text-xs text-slate-600">
             <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-red-500" />
+              <span className="h-2 w-2 rounded-full bg-[#ff6b6b]" />
               Deadline tugas
             </div>
             <div className="flex items-center gap-1.5">
@@ -286,18 +286,18 @@ export default function KalenderPage() {
         </section>
 
         {selectedDate && (
-          <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <section className="card-vibrant rounded-3xl p-4">
             <h3 className="text-lg font-semibold text-[#1E2761]">
               {format(selectedDate, "EEEE, d MMMM yyyy", { locale: localeId })}
             </h3>
 
             {loading ? (
-              <p className="mt-3 text-sm text-slate-500">Memuat...</p>
+              <p className="mt-3 text-sm text-slate-600">Memuat...</p>
             ) : (
               <div className="mt-3 space-y-4">
                 {selectedTasks.length > 0 && (
                   <div>
-                    <h4 className="mb-2 text-sm font-semibold text-red-600">
+                    <h4 className="mb-2 text-sm font-semibold text-[#ff6b6b]">
                       Deadline Tugas
                     </h4>
                     <ul className="space-y-2">
@@ -307,12 +307,12 @@ export default function KalenderPage() {
                           className="rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm"
                         >
                           <div className="flex items-center gap-2">
-                            <Clock size={14} className="text-red-500" />
+                            <Clock size={14} className="text-[#ff6b6b]" />
                             <span className="font-medium text-slate-900">
                               {task.title}
                             </span>
                           </div>
-                          <p className="mt-0.5 text-xs text-slate-500">
+                          <p className="mt-0.5 text-xs text-slate-600">
                             Status: {task.status}
                           </p>
                         </li>
@@ -338,12 +338,12 @@ export default function KalenderPage() {
                               {schedule.title}
                             </span>
                           </div>
-                          <p className="mt-0.5 text-xs text-slate-500">
+                          <p className="mt-0.5 text-xs text-slate-600">
                             {format(parseISO(schedule.waktu_mulai), "HH:mm")} -{" "}
                             {format(parseISO(schedule.waktu_selesai), "HH:mm")}
                           </p>
                           {schedule.rekomendasi_ai && (
-                            <p className="mt-0.5 text-xs italic text-slate-400">
+                            <p className="mt-0.5 text-xs italic text-slate-500">
                               {schedule.rekomendasi_ai}
                             </p>
                           )}
@@ -354,7 +354,7 @@ export default function KalenderPage() {
                 )}
 
                 {selectedTasks.length === 0 && selectedSchedules.length === 0 && (
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-slate-600">
                     Tidak ada tugas atau jadwal di tanggal ini.
                   </p>
                 )}

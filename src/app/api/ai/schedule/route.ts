@@ -62,22 +62,43 @@ export async function POST(request: Request) {
 
     const freeSlots = body?.freeSlots ?? [];
 
-    const prompt = `Anda adalah asisten jadwal belajar TaskFlow AI. Susun jadwal belajar optimal untuk tugas-tugas berikut berdasarkan deadline, estimasi waktu, dan slot waktu kosong.
+    // Ambil jam produktif historis dari DB
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: activityLogs } = await supabase
+      .from("user_activity_logs")
+      .select("active_at")
+      .eq("user_id", user.id)
+      .gte("active_at", oneWeekAgo)
+      .order("active_at", { ascending: false });
+
+    const hourCounts = new Map<number, number>();
+    (activityLogs ?? []).forEach((log) => {
+      const hour = new Date(log.active_at).getHours();
+      hourCounts.set(hour, (hourCounts.get(hour) ?? 0) + 1);
+    });
+    const productiveHours = Array.from(hourCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([hour]) => hour);
+
+    const prompt = `Anda adalah asisten jadwal belajar TaskFlow AI. Susun jadwal belajar optimal untuk tugas-tugas berikut berdasarkan deadline, estimasi waktu, slot waktu kosong, dan jam produktif pengguna.
 
 Tugas:
 ${JSON.stringify(tasks, null, 2)}
 
-Slot waktu kosong:
+Slot waktu kosong (jadwal valid):
 ${JSON.stringify(freeSlots, null, 2)}
 
-Aturan ketat:
-1. Setiap tugas HARUS dijadwalkan SEBELUM deadline-nya. Jangan pernah menjadwalkan tugas setelah deadline sudah lewat.
-2. Total durasi jadwal untuk setiap tugas harus sesuai dengan estimasi waktu (estimated_hours). Jangan kurangi dan jangan tambahkan terlalu banyak.
-3. Prioritaskan tugas dengan deadline lebih dekat dan prioritas lebih tinggi (nilai prioritas lebih kecil = lebih tinggi).
-4. Gunakan slot waktu kosong yang tersedia secara efisien dan hindari bentrok antar tugas.
-5. Jadwal belajar HARUS realistis: jangan pernah menjadwalkan belajar sebelum jam yang tersedia di slot, dan jangan pernah melewati jam 22:00 (maksimal jam 10 malam). Hari kerja (Senin-Jumat) hanya boleh 18:00-22:00. Hari libur (Sabtu-Minggu) boleh 08:00-22:00. Jangan pernah menjadwalkan belajar di tengah malam.
-6. Output JSON dengan property "schedules" yang berisi array objek {"taskId":"...","title":"...","scheduled_date":"YYYY-MM-DD","start_time":"HH:mm","end_time":"HH:mm"}.`;
+Jam produktif historis pengguna (paling sering aktif): ${productiveHours.length > 0 ? productiveHours.join(", ") : "belum ada data"}
 
+Aturan ketat:
+1. Setiap tugas HARUS dijadwalkan SEBELUM deadline-nya.
+2. Total durasi jadwal untuk setiap tugas harus sesuai estimasi waktu.
+3. Prioritaskan tugas dengan ai_score lebih tinggi (0-100, semakin tinggi semakin prioritas).
+4. Gunakan slot waktu kosong yang tersedia. Jangan pernah menjadwalkan di luar slot kosong.
+5. Jika jam produktif tersedia dan beririsan dengan slot kosong, tempatkan tugas prioritas tinggi di jam-jam tersebut.
+6. Jadwal belajar HARUS realistis: maksimal jam 22:00. Hari kerja (Senin-Jumat) idealnya 18:00-22:00 jika slot tersedia. Hari libur (Sabtu-Minggu) boleh 08:00-22:00.
+7. Output JSON dengan property "schedules" yang berisi array objek {"taskId":"...","title":"...","scheduled_date":"YYYY-MM-DD","start_time":"HH:mm","end_time":"HH:mm"}.`;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
@@ -116,6 +137,10 @@ Aturan ketat:
         { status: 502 },
       );
     }
+
+    // Hapus jadwal lama untuk tugas yang dijadwalkan ulang agar tidak duplikat
+    const taskIds = tasks.map((t) => t.id);
+    await supabase.from("schedules").delete().eq("user_id", user.id).in("task_id", taskIds);
 
     const insertPayload = schedules.map((schedule) => {
       const scheduledDate = String(schedule.scheduled_date ?? "");

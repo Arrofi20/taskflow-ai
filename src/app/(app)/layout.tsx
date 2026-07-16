@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { ActivityTracker } from "@/components/app/activity-tracker";
 import { BottomNav } from "@/components/app/bottom-nav";
 import { NotificationProvider } from "@/components/app/notification-provider";
 import { createClient } from "@/lib/supabase/server";
@@ -21,7 +22,8 @@ export default async function AppLayout({
 
   return (
     <NotificationProvider>
-      <div className="flex min-h-full flex-1 flex-col bg-slate-50">
+      <div className="flex min-h-full flex-1 flex-col">
+        <ActivityTracker />
         <div className={appShellClassName}>{children}</div>
         <BottomNav />
       </div>

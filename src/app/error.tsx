@@ -15,15 +15,15 @@ export default function GlobalError({
 
   return (
     <html lang="id">
-      <body className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-        <div className="w-full max-w-sm rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+      <body className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f8f9fe] via-[#f0f4ff] to-[#fef9f0] p-4">
+        <div className="card-vibrant w-full max-w-sm rounded-3xl p-6 text-center">
           <h2 className="text-xl font-bold text-[#1E2761]">Terjadi Kesalahan</h2>
           <p className="mt-2 text-sm text-slate-500">
             Maaf, aplikasi mengalami masalah. Silakan coba lagi.
           </p>
           <button
             onClick={() => reset()}
-            className="mt-4 w-full rounded-2xl bg-[#1E2761] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#17204f]"
+            className="gradient-bright-primary mt-4 w-full rounded-2xl px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"
           >
             Coba Lagi
           </button>

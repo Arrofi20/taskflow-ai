@@ -29,19 +29,15 @@ export default function ProfilPage() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       if (!user) {
         router.replace("/login");
         return;
       }
 
-      const name =
-        (user.user_metadata?.full_name as string | undefined) ?? "Pengguna";
+      const name = (user.user_metadata?.full_name as string | undefined) ?? "Pengguna";
 
-      // Cek premium dari tabel users dulu, lalu fallback ke metadata
       const { data: profile } = await supabase
         .from("users")
         .select("is_premium")
@@ -52,11 +48,9 @@ export default function ProfilPage() {
       if (profile?.is_premium != null) {
         premium = profile.is_premium;
       } else {
-        const savedPlan =
-          ((user.user_metadata?.plan as string | undefined) ??
-            (user.user_metadata?.subscription as string | undefined) ??
-            "free")
-            .toLowerCase();
+        const savedPlan = ((user.user_metadata?.plan as string | undefined) ??
+          (user.user_metadata?.subscription as string | undefined) ??
+          "free").toLowerCase();
         premium = savedPlan === "premium";
       }
 
@@ -71,79 +65,63 @@ export default function ProfilPage() {
     }
 
     loadProfile();
-
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [router, supabase]);
 
   async function handleSaveName(event: React.FormEvent) {
     event.preventDefault();
-
     const nextName = draftName.trim();
     if (!nextName) {
       setMessage("Nama tidak boleh kosong.");
       return;
     }
-
     setSavingName(true);
     setMessage(null);
-
-    const { error } = await supabase.auth.updateUser({
-      data: { full_name: nextName },
-    });
-
+    const { error } = await supabase.auth.updateUser({ data: { full_name: nextName } });
     setSavingName(false);
-
     if (error) {
       setMessage("Gagal memperbarui nama.");
       return;
     }
-
     setFullName(nextName);
     setIsEditingName(false);
     setMessage("Nama berhasil diperbarui.");
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-5 text-slate-800">
+    <main className="px-4 py-5">
       <div className="mx-auto flex max-w-4xl flex-col gap-4">
-        <section className="rounded-[28px] bg-gradient-to-r from-[#1E2761] to-[#028090] p-5 text-white shadow-sm">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm text-white/80">Halo,</p>
-              <h1 className="mt-1 text-2xl font-bold">
-                {loading ? "Memuat profil..." : fullName}
-              </h1>
+        <section className="gradient-bright-primary relative overflow-hidden rounded-[28px] p-5 text-white shadow-lg shadow-[#1E2761]/10">
+          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/5" />
+          <div className="absolute -bottom-6 -left-6 h-20 w-20 rounded-full bg-white/5" />
+          <div className="relative">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm text-white/70">Halo,</p>
+                <h1 className="mt-1 text-2xl font-bold">
+                  {loading ? "Memuat profil..." : fullName}
+                </h1>
+              </div>
+              <div className={`rounded-full px-3 py-1 text-sm font-semibold backdrop-blur-sm ${
+                isPremium ? "bg-amber-400/20 text-amber-100" : "bg-white/15 text-white"
+              }`}>
+                {isPremium ? "PREMIUM" : "FREE"}
+              </div>
             </div>
-            <div
-              className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                isPremium
-                  ? "bg-amber-400/20 text-amber-100"
-                  : "bg-white/15 text-white"
-              }`}
-            >
-              {isPremium ? "PREMIUM" : "FREE"}
+            <div className="mt-4 flex items-center gap-2 rounded-2xl bg-white/10 p-3 text-sm backdrop-blur-sm">
+              <ShieldCheck size={16} />
+              <span>Status akun: {plan}</span>
             </div>
-          </div>
-
-          <div className="mt-4 flex items-center gap-2 rounded-2xl bg-white/15 p-3 text-sm">
-            <ShieldCheck size={16} />
-            <span>Status akun: {plan}</span>
           </div>
         </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="card-vibrant rounded-3xl p-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-[#1E2761]">Informasi akun</h2>
             <button
               type="button"
-              onClick={() => {
-                setDraftName(fullName);
-                setIsEditingName(true);
-                setMessage(null);
-              }}
-              className="flex items-center gap-1 rounded-full bg-[#028090]/10 px-3 py-1.5 text-sm font-medium text-[#028090]"
+              onClick={() => { setDraftName(fullName); setIsEditingName(true); setMessage(null); }}
+              className="flex items-center gap-1 rounded-full bg-gradient-to-br from-[#028090]/10 to-[#03a3b5]/10 px-3 py-1.5 text-sm font-medium text-[#028090]"
             >
               <Edit3 size={15} />
               Edit nama
@@ -152,12 +130,12 @@ export default function ProfilPage() {
 
           {isEditingName ? (
             <form onSubmit={handleSaveName} className="mt-4 space-y-3">
-              <label className="block text-sm text-slate-700">
+              <label className="block text-sm text-slate-600">
                 <span className="mb-1 block font-medium">Nama lengkap</span>
                 <input
                   value={draftName}
                   onChange={(event) => setDraftName(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#028090]"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-[#028090] focus:ring-2 focus:ring-[#028090]/20"
                   placeholder="Masukkan nama lengkap"
                 />
               </label>
@@ -165,18 +143,14 @@ export default function ProfilPage() {
                 <button
                   type="submit"
                   disabled={savingName}
-                  className="rounded-2xl bg-[#1E2761] px-4 py-2 text-sm font-semibold text-white"
+                  className="rounded-2xl gradient-bright-primary px-4 py-2 text-sm font-semibold text-white shadow-sm"
                 >
                   {savingName ? "Menyimpan..." : "Simpan"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setDraftName(fullName);
-                    setIsEditingName(false);
-                    setMessage(null);
-                  }}
-                  className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600"
+                  onClick={() => { setDraftName(fullName); setIsEditingName(false); setMessage(null); }}
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm"
                 >
                   Batal
                 </button>
@@ -185,11 +159,11 @@ export default function ProfilPage() {
           ) : (
             <div className="mt-4 space-y-3">
               <div>
-                <p className="text-sm text-slate-500">Nama lengkap</p>
+                <p className="text-sm text-slate-400">Nama lengkap</p>
                 <p className="mt-1 font-semibold text-slate-900">{fullName}</p>
               </div>
               <div>
-                <p className="text-sm text-slate-500">Email</p>
+                <p className="text-sm text-slate-400">Email</p>
                 <div className="mt-1 flex items-center gap-2 font-semibold text-slate-900">
                   <Mail size={15} className="text-[#028090]" />
                   <span>{email || "-"}</span>
@@ -199,7 +173,7 @@ export default function ProfilPage() {
           )}
 
           {message ? (
-            <p className="mt-3 rounded-xl bg-slate-100 px-3 py-2 text-sm text-slate-600">
+            <p className="mt-3 rounded-xl bg-gradient-to-r from-slate-50 to-slate-100 px-3 py-2 text-sm text-slate-600">
               {message}
             </p>
           ) : null}
@@ -208,56 +182,56 @@ export default function ProfilPage() {
         <section className="space-y-3">
           <Link
             href="/profil/waktu-kosong"
-            className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
+            className="card-vibrant flex items-center justify-between rounded-2xl px-4 py-3"
           >
             <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-[#028090]/10 p-2 text-[#028090]">
+              <div className="rounded-2xl bg-gradient-to-br from-[#028090]/10 to-[#03a3b5]/10 p-2 text-[#028090]">
                 <Clock3 size={18} />
               </div>
               <div>
                 <p className="font-semibold text-[#1E2761]">Waktu Kosong</p>
-                <p className="text-sm text-slate-500">Atur slot waktu belajar</p>
+                <p className="text-xs text-slate-400">Atur slot waktu belajar</p>
               </div>
             </div>
-            <ChevronRight size={18} className="text-slate-400" />
+            <ChevronRight size={18} className="text-slate-300" />
           </Link>
 
           <Link
             href="/profil/subscription"
-            className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
+            className="card-vibrant flex items-center justify-between rounded-2xl px-4 py-3"
           >
             <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-[#1E2761]/10 p-2 text-[#1E2761]">
+              <div className="rounded-2xl bg-gradient-to-br from-[#1E2761]/10 to-[#2a3675]/10 p-2 text-[#1E2761]">
                 <Zap size={18} />
               </div>
               <div>
                 <p className="font-semibold text-[#1E2761]">Subscription</p>
-                <p className="text-sm text-slate-500">
+                <p className="text-xs text-slate-400">
                   {isPremium ? "Kelola paket premium" : "Lihat paket premium"}
                 </p>
               </div>
             </div>
-            <ChevronRight size={18} className="text-slate-400" />
+            <ChevronRight size={18} className="text-slate-300" />
           </Link>
 
           <Link
             href="/referral"
-            className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
+            className="card-vibrant flex items-center justify-between rounded-2xl px-4 py-3"
           >
             <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-amber-500/10 p-2 text-amber-600">
+              <div className="rounded-2xl bg-gradient-to-br from-[#ff6b6b]/10 to-[#ff8e8e]/10 p-2 text-[#ff6b6b]">
                 <Gift size={18} />
               </div>
               <div>
                 <p className="font-semibold text-[#1E2761]">Referral</p>
-                <p className="text-sm text-slate-500">Ajak teman dan dapatkan premium gratis</p>
+                <p className="text-xs text-slate-400">Ajak teman dan dapatkan premium gratis</p>
               </div>
             </div>
-            <ChevronRight size={18} className="text-slate-400" />
+            <ChevronRight size={18} className="text-slate-300" />
           </Link>
         </section>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
+        <div className="card-vibrant rounded-3xl p-2">
           <LogoutButton />
         </div>
       </div>

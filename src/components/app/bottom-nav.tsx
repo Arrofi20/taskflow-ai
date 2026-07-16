@@ -7,11 +7,18 @@ import {
   Calendar,
   User,
 } from "lucide-react";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
+
+const navConfig = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, gradient: "from-[#1E2761] to-[#028090]" },
+  { href: "/tugas", label: "Tugas", icon: CheckSquare, gradient: "from-[#ff6b6b] to-[#ff8e8e]" },
+  { href: "/jadwal", label: "Jadwal", icon: CalendarDays, gradient: "from-[#6bcb77] to-[#81ecec]" },
+  { href: "/kalender", label: "Kalender", icon: Calendar, gradient: "from-[#a66cff] to-[#c084fc]" },
+  { href: "/profil", label: "Profil", icon: User, gradient: "from-[#ffd93d] to-[#ffb5a7]" },
+];
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -55,57 +62,44 @@ export function BottomNav() {
     loadUrgentTasks();
   }, []);
 
-  const navItems: { href: string; label: string; icon: React.ElementType; badge?: number; proBadge?: boolean }[] = [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/tugas", label: "Tugas", icon: CheckSquare, badge: urgentCount > 0 ? urgentCount : undefined },
-    { href: "/jadwal", label: "Jadwal", icon: CalendarDays },
-    { href: "/kalender", label: "Kalender", icon: Calendar, proBadge: isPremium === false },
-    { href: "/profil", label: "Profil", icon: User },
-  ];
-
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)]">
-      <div className="mx-auto flex w-full max-w-lg items-stretch justify-around px-2 sm:max-w-2xl sm:px-4 lg:max-w-5xl xl:max-w-6xl">
-        {navItems.map(({ href, label, icon: Icon, badge, proBadge }) => {
-          const isActive =
-            pathname === href || pathname.startsWith(`${href}/`);
-
-          const handleClick = (e: React.MouseEvent) => {
-            if (href === "/kalender" && isPremium === false) {
-              e.preventDefault();
-              router.push("/profil/subscription");
-            }
-          };
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[#1E2761]/6 bg-white/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-lg items-stretch justify-around px-1 sm:max-w-2xl sm:px-4 lg:max-w-5xl xl:max-w-6xl">
+        {navConfig.map(({ href, label, icon: Icon, gradient }) => {
+          const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
           return (
-            <Link
+            <button
               key={href}
-              href={href}
-              onClick={handleClick}
-              className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 px-2 py-3 text-xs font-medium transition ${
+              type="button"
+              onClick={() => router.push(href)}
+              className={`relative flex min-w-0 flex-1 touch-manipulation flex-col items-center gap-0.5 px-1 py-2 text-[11px] font-medium transition-all duration-300 active:scale-90 sm:gap-1 sm:px-3 sm:py-3 sm:text-xs ${
                 isActive
-                  ? "text-[#028090]"
-                  : "text-slate-500 hover:text-[#1E2761]"
+                  ? "text-white"
+                  : "text-slate-400 hover:text-[#1E2761]"
               }`}
             >
-              <div className="relative">
+              <div className={`relative rounded-xl p-1.5 transition-all duration-300 ${isActive ? `bg-gradient-to-br ${gradient} shadow-md` : ""}`}>
                 <Icon
-                  className={`h-5 w-5 ${isActive ? "text-[#028090]" : "text-slate-400"}`}
+                  className={`h-5 w-5 transition-all duration-300 sm:h-6 sm:w-6 ${isActive ? "text-white scale-110 drop-shadow-sm" : "text-slate-400"}`}
                   strokeWidth={isActive ? 2.5 : 2}
                 />
-                {badge != null && (
-                  <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                    {badge > 9 ? "9+" : badge}
+                {urgentCount > 0 && href === "/tugas" && (
+                  <span className="absolute -right-2 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gradient-to-br from-[#ff6b6b] to-[#ff8e8e] px-1 text-[10px] font-bold text-white shadow-sm shadow-[#ff6b6b]/30">
+                    {urgentCount > 9 ? "9+" : urgentCount}
                   </span>
                 )}
-                {proBadge && (
-                  <span className="absolute -right-5 -top-2 rounded bg-[#1E2761] px-1 text-[8px] font-bold text-white">
+                {href === "/kalender" && isPremium === false && (
+                  <span className="absolute -right-2 -top-1 rounded bg-gradient-to-br from-[#1E2761] to-[#028090] px-1 text-[8px] font-bold text-white shadow-sm">
                     PRO
                   </span>
                 )}
               </div>
-              <span className="truncate">{label}</span>
-            </Link>
+              <span className={`truncate transition-all ${isActive ? "font-semibold text-[#1E2761]" : ""}`}>{label}</span>
+              {isActive && (
+                <span className={`absolute -bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-gradient-to-r ${gradient}`} />
+              )}
+            </button>
           );
         })}
       </div>

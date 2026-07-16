@@ -24,6 +24,7 @@ export function AddTaskForm() {
   const router = useRouter();
   const [values, setValues] = useState<TaskFormValues>({
     title: "",
+    mataKuliah: "",
     taskType: "",
     deadlineDate: "",
     deadlineTime: "",
@@ -123,6 +124,7 @@ export function AddTaskForm() {
       const { error } = await supabase.from("tasks").insert({
         user_id: user.id,
         nama_tugas: values.title.trim(),
+        mata_kuliah: values.mataKuliah.trim() || null,
         jenis_tugas: values.taskType || "tugas",
         deadline: buildDueDateIso(values.deadlineDate, values.deadlineTime),
         estimasi_waktu: Number(values.estimatedHours),
@@ -154,7 +156,7 @@ export function AddTaskForm() {
         Kembali ke daftar tugas
       </Link>
 
-      <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+      <div className="card-vibrant rounded-2xl p-5">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-[#1E2761]">Tambah Tugas</h1>
           <p className="mt-1 text-sm text-slate-600">
@@ -193,7 +195,7 @@ export function AddTaskForm() {
 
           <div>
             <label htmlFor="title" className={labelClassName}>
-              Nama Tugas
+              Nama Tugas <span className="text-red-500">*</span>
             </label>
             <input
               id="title"
@@ -214,8 +216,30 @@ export function AddTaskForm() {
           </div>
 
           <div>
+            <label htmlFor="mataKuliah" className={labelClassName}>
+              Mata Kuliah
+            </label>
+            <input
+              id="mataKuliah"
+              name="mataKuliah"
+              type="text"
+              value={values.mataKuliah}
+              onChange={(event) => updateField("mataKuliah", event.target.value)}
+              className={inputClassName}
+              placeholder="Contoh: Sejarah Indonesia"
+              aria-invalid={Boolean(fieldErrors.mataKuliah)}
+              aria-describedby={fieldErrors.mataKuliah ? "mataKuliah-error" : undefined}
+            />
+            {fieldErrors.mataKuliah && (
+              <p id="mataKuliah-error" className="mt-1.5 text-sm text-red-600">
+                {fieldErrors.mataKuliah}
+              </p>
+            )}
+          </div>
+
+          <div>
             <label htmlFor="taskType" className={labelClassName}>
-              Jenis Tugas
+              Jenis Tugas <span className="text-red-500">*</span>
             </label>
             <select
               id="taskType"

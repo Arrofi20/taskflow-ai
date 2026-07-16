@@ -16,6 +16,13 @@ export function useDeadlineAlerts() {
       const permission = await requestNotificationPermission();
       if (permission !== "granted") return;
 
+      // Panggil API alert AI untuk update risk percentage di DB
+      try {
+        await fetch("/api/ai/alert", { method: "POST" });
+      } catch {
+        // Abaikan jika API gagal
+      }
+
       const now = new Date();
       const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 

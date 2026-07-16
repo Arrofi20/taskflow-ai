@@ -7,7 +7,7 @@ export type Json =
   | Json[];
 
 export type TaskStatus = "pending" | "in_progress" | "completed";
-export type TaskType = "tugas" | "ujian" | "proyek" | "presentasi";
+export type TaskType = "tugas" | "ujian" | "proyek" | "presentasi" | "praktikum";
 
 export type Database = {
   public: {
@@ -17,11 +17,14 @@ export type Database = {
           id: string;
           user_id: string;
           nama_tugas: string;
+          mata_kuliah: string | null;
           jenis_tugas: TaskType;
           deadline: string;
           estimasi_waktu: number | null;
           tingkat_kesulitan: number | null;
           prioritas: number | null;
+          ai_score: number | null;
+          risk_percentage: number | null;
           status: TaskStatus;
           created_at: string;
           completed_at: string | null;
@@ -31,11 +34,14 @@ export type Database = {
           id?: string;
           user_id: string;
           nama_tugas: string;
+          mata_kuliah?: string | null;
           jenis_tugas: TaskType;
           deadline: string;
           estimasi_waktu?: number | null;
           tingkat_kesulitan?: number | null;
           prioritas?: number | null;
+          ai_score?: number | null;
+          risk_percentage?: number | null;
           status?: TaskStatus;
           created_at?: string;
           completed_at?: string | null;
@@ -45,11 +51,14 @@ export type Database = {
           id?: string;
           user_id?: string;
           nama_tugas?: string;
+          mata_kuliah?: string | null;
           jenis_tugas?: TaskType;
           deadline?: string;
           estimasi_waktu?: number | null;
           tingkat_kesulitan?: number | null;
           prioritas?: number | null;
+          ai_score?: number | null;
+          risk_percentage?: number | null;
           status?: TaskStatus;
           created_at?: string;
           completed_at?: string | null;
@@ -284,6 +293,27 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_activity_logs: {
+        Row: {
+          id: string;
+          user_id: string;
+          active_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          active_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          active_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       push_subscriptions: {
         Row: {
           id: string;
@@ -327,4 +357,5 @@ export type UserProfile = Database["public"]["Tables"]["users"]["Row"];
 export type Referral = Database["public"]["Tables"]["referrals"]["Row"];
 export type B2BLead = Database["public"]["Tables"]["b2b_leads"]["Row"];
 export type UserStreak = Database["public"]["Tables"]["user_streaks"]["Row"];
+export type UserActivityLog = Database["public"]["Tables"]["user_activity_logs"]["Row"];
 export type PushSubscription = Database["public"]["Tables"]["push_subscriptions"]["Row"];

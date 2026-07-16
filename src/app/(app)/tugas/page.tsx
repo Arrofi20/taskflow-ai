@@ -12,6 +12,8 @@ export default async function TugasPage() {
     redirect("/login");
   }
 
+  // Gunakan kolom yang pasti ada di database (tanpa ai_score/risk_percentage yang
+  // hanya tersedia setelah Generate AI Prioritas dijalankan via API)
   const { data: tasks, error } = await supabase
     .from("tasks")
     .select(
@@ -20,7 +22,19 @@ export default async function TugasPage() {
     .eq("user_id", authData.user.id);
 
   if (error) {
-    console.error("Failed to load tasks", error);
+    console.error(
+      "Gagal memuat tugas — detail:",
+      JSON.stringify(
+        {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        },
+        null,
+        2,
+      ),
+    );
   }
 
   const normalizedTasks = (tasks ?? [])
@@ -68,7 +82,7 @@ export default async function TugasPage() {
           : null;
       const taskType =
         typeof record.jenis_tugas === "string" &&
-        ["tugas", "ujian", "proyek", "presentasi"].includes(
+        ["tugas", "ujian", "proyek", "presentasi", "praktikum"].includes(
           record.jenis_tugas,
         )
           ? (record.jenis_tugas as TaskType)
@@ -81,6 +95,8 @@ export default async function TugasPage() {
         due_date: taskDeadline,
         estimated_hours: taskEstimatedHours,
         prioritas: taskPriority,
+        ai_score: taskPriority, // fallback ke prioritas jika ai_score belum ada
+        risk_percentage: null,
         tingkat_kesulitan: taskDifficulty,
         status: taskStatusValue,
       };
@@ -89,7 +105,7 @@ export default async function TugasPage() {
   return (
     <TaskList
       initialTasks={normalizedTasks}
-      fetchError={error ? "Gagal memuat daftar tugas." : null}
+      fetchError={error ? `Gagal memuat daftar tugas: ${error.message}` : null}
     />
   );
 }

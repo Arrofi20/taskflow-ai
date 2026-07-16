@@ -3,12 +3,14 @@ export const TASK_TYPES = [
   { value: "ujian", label: "Ujian" },
   { value: "proyek", label: "Proyek" },
   { value: "presentasi", label: "Presentasi" },
+  { value: "praktikum", label: "Praktikum" },
 ] as const;
 
 export type TaskType = (typeof TASK_TYPES)[number]["value"];
 
 export type TaskFormValues = {
   title: string;
+  mataKuliah: string;
   taskType: TaskType | "";
   deadlineDate: string;
   deadlineTime: string;

@@ -16,20 +16,41 @@ function formatDeadlineLabel(deadline: string) {
   });
 }
 
-function buildPrompt(userName: string, tasks: Array<Record<string, unknown>>) {
-  return `Anda adalah asisten TaskFlow AI. Buatkan 1-3 pesan peringatan personal untuk user berikut berdasarkan tugas yang hampir deadline atau sudah lewat deadline.
+function buildPrompt(
+  userName: string,
+  tasks: Array<Record<string, unknown>>,
+  completedHistory: Array<{ jenis_tugas: string; actual_hours: number | null; estimasi_waktu: number | null }>,
+) {
+  return `Anda adalah asisten TaskFlow AI. Lakukan dua hal:
+1. Prediksi probabilitas keterlambatan (0-100%) untuk setiap tugas aktif berdasarkan sisa waktu, estimasi pengerjaan, dan histori penyelesaian tugas serupa.
+2. Buat 1-3 pesan peringatan proaktif jika ada tugas dengan risiko > 70%.
 
 Nama user: ${userName}
 
-Tugas:
+Tugas aktif:
 ${JSON.stringify(tasks, null, 2)}
 
+Histori penyelesaian tugas serupa (completed):
+${JSON.stringify(completedHistory, null, 2)}
+
 Instruksi:
-1. Fokus pada tugas yang belum selesai dan memiliki deadline kurang dari 24 jam atau sudah lewat deadline.
-2. Tulis pesan yang suportif, singkat, dan personal.
-3. Kembalikan JSON dengan format:
-{"alerts":[{"title":"...","message":"...","severity":"low|medium|high"}]}
-4. Jangan buat alert kosong. Jika tidak ada tugas yang relevan, kembalikan {"alerts": []}.`;
+1. Hitung "risk_percentage" per tugas dengan simulasi variabel:
+   - Sisa hari = (deadline - hari ini).
+   - Buffer ratio = estimasi_waktu / sisa_hari. Jika > 3 jam/hari, risiko naik.
+   - Histori serupa: jika jenis_tugas yang sama di histori memiliki actual_hours > estimasi_waktu, risiko naik 15-25%.
+   - Deadline < 24 jam: risiko minimal 50%.
+   - Deadline lewat: risiko 100%.
+2. Kembalikan JSON dengan format:
+{
+  "riskPredictions": [
+    {"task_id":"...","risk_percentage":78,"reason":"..."}
+  ],
+  "alerts": [
+    {"title":"...","message":"...","severity":"low|medium|high"}
+  ]
+}
+3. Jika tidak ada tugas berisiko, alerts bisa kosong array.
+4. Jangan buat alert kosong.`;
 }
 
 export async function POST() {
@@ -49,11 +70,10 @@ export async function POST() {
 
     const now = new Date();
     const nowIso = now.toISOString();
-    const next24h = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
 
     const { data: tasks, error: tasksError } = await supabase
       .from("tasks")
-      .select("id,nama_tugas,deadline,status")
+      .select("id,nama_tugas,jenis_tugas,deadline,estimasi_waktu,status")
       .eq("user_id", user.id)
       .neq("status", "completed")
       .order("deadline", { ascending: true });
@@ -65,25 +85,31 @@ export async function POST() {
       );
     }
 
-    const relevantTasks = (tasks ?? []).filter((task) => {
-      const deadline = task.deadline;
-      if (!deadline) {
-        return false;
-      }
-
-      const deadlineDate = new Date(deadline);
-      if (Number.isNaN(deadlineDate.getTime())) {
-        return false;
-      }
-
-      const isNearDeadline = deadlineDate.getTime() >= new Date(nowIso).getTime() && deadlineDate.getTime() <= new Date(next24h).getTime();
-      const isOverdue = deadlineDate.getTime() < new Date(nowIso).getTime();
-      return isNearDeadline || isOverdue;
-    });
-
-    if (relevantTasks.length === 0) {
-      return NextResponse.json({ success: true, alerts: [] });
+    if (!tasks || tasks.length === 0) {
+      return NextResponse.json({ success: true, alerts: [], riskPredictions: [] });
     }
+
+    // Ambil histori tugas selesai untuk prediksi
+    const { data: history } = await supabase
+      .from("tasks")
+      .select("jenis_tugas,actual_hours,estimasi_waktu")
+      .eq("user_id", user.id)
+      .eq("status", "completed")
+      .not("actual_hours", "is", null)
+      .limit(20);
+
+    const normalizedTasks = tasks.map((task) => ({
+      id: task.id,
+      title: task.nama_tugas,
+      jenis_tugas: task.jenis_tugas,
+      deadline: task.deadline,
+      estimasi_waktu: task.estimasi_waktu,
+      status: task.status,
+      deadlineLabel: formatDeadlineLabel(task.deadline),
+      hoursRemaining: task.deadline
+        ? Math.max(0, Math.round((new Date(task.deadline).getTime() - new Date(nowIso).getTime()) / (1000 * 60 * 60)))
+        : null,
+    }));
 
     const response = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
@@ -94,13 +120,7 @@ export async function POST() {
           "x-goog-api-key": process.env.GEMINI_API_KEY ?? "",
         },
         body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: buildPrompt(user.user_metadata?.full_name ?? user.email ?? "Pengguna", relevantTasks.map((task) => ({
-            id: task.id,
-            title: task.nama_tugas,
-            deadline: task.deadline,
-            status: task.status,
-            deadlineLabel: formatDeadlineLabel(task.deadline),
-          }))) }] }],
+          contents: [{ role: "user", parts: [{ text: buildPrompt(user.user_metadata?.full_name ?? user.email ?? "Pengguna", normalizedTasks, history ?? []) }] }],
           generationConfig: {
             responseMimeType: "application/json",
             temperature: 0.2,
@@ -119,9 +139,12 @@ export async function POST() {
       );
     }
 
-    let parsed: { alerts?: Array<Record<string, unknown>> };
+    let parsed: {
+      riskPredictions?: Array<Record<string, unknown>>;
+      alerts?: Array<Record<string, unknown>>;
+    };
     try {
-      parsed = JSON.parse(content) as { alerts?: Array<Record<string, unknown>> };
+      parsed = JSON.parse(content) as typeof parsed;
     } catch {
       return NextResponse.json(
         { success: false, error: "Gemini returned invalid JSON." },
@@ -129,33 +152,53 @@ export async function POST() {
       );
     }
 
-    const alerts = (parsed.alerts ?? []).filter((alert) =>
-      typeof alert.title === "string" && typeof alert.message === "string",
+    const riskPredictions = (parsed.riskPredictions ?? []).filter(
+      (rp): rp is { task_id: string; risk_percentage: number } =>
+        typeof rp.task_id === "string" && typeof rp.risk_percentage === "number",
     );
 
-    if (alerts.length === 0) {
-      return NextResponse.json({ success: true, alerts: [] });
+    // Update risk_percentage di DB — lewati jika kolom belum ada (migration 007)
+    if (riskPredictions.length > 0) {
+      try {
+        await Promise.all(
+          riskPredictions.map((rp) =>
+            supabase
+              .from("tasks")
+              .update({ risk_percentage: Number(rp.risk_percentage) })
+              .eq("id", String(rp.task_id))
+              .eq("user_id", user.id),
+          ),
+        );
+      } catch {
+        // Kolom risk_percentage mungkin belum ada — skip
+      }
     }
 
-    const insertPayload: Database["public"]["Tables"]["alerts"]["Insert"][] = alerts.map((alert) => ({
-      user_id: user.id,
-      task_id: relevantTasks[0]?.id ?? null,
-      title: String(alert.title ?? "Peringatan"),
-      message: String(alert.message ?? ""),
-      severity: String(alert.severity ?? "medium"),
-      status: "active",
-    }));
+    const alerts = (parsed.alerts ?? []).filter(
+      (alert) => typeof alert.title === "string" && typeof alert.message === "string",
+    );
 
-    const { error: insertError } = await supabase.from("alerts").insert(insertPayload);
+    if (alerts.length > 0) {
+      const insertPayload: Database["public"]["Tables"]["alerts"]["Insert"][] = alerts.map((alert) => ({
+        user_id: user.id,
+        task_id: riskPredictions[0]?.task_id ?? null,
+        title: String(alert.title ?? "Peringatan"),
+        message: String(alert.message ?? ""),
+        severity: String(alert.severity ?? "medium"),
+        status: "active",
+      }));
 
-    if (insertError) {
-      return NextResponse.json(
-        { success: false, error: insertError.message },
-        { status: 500 },
-      );
+      const { error: insertError } = await supabase.from("alerts").insert(insertPayload);
+
+      if (insertError) {
+        return NextResponse.json(
+          { success: false, error: insertError.message },
+          { status: 500 },
+        );
+      }
     }
 
-    return NextResponse.json({ success: true, alerts });
+    return NextResponse.json({ success: true, alerts, riskPredictions });
   } catch (error) {
     return NextResponse.json(
       {

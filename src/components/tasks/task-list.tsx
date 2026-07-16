@@ -7,24 +7,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { EmptyTasksState } from "@/components/tasks/empty-state";
+import { PriorityScoreBar } from "@/components/tasks/priority-score-bar";
+import { RiskIndicator } from "@/components/tasks/risk-indicator";
 import { createClient } from "@/lib/supabase/client";
 import type { TaskStatus, TaskType } from "@/lib/supabase/database.types";
-import { getPriorityBadge } from "@/lib/tasks/priority-badge";
 import { getTaskTypeLabel } from "@/lib/tasks/validation";
 
-function sortTasksByPriority(tasks: TaskListItem[]) {
+function sortTasksByAiScore(tasks: TaskListItem[]) {
   return [...tasks].sort((a, b) => {
-    if (a.prioritas == null && b.prioritas == null) {
-      return (a.due_date ?? "").localeCompare(b.due_date ?? "");
-    }
-
-    if (a.prioritas == null) return 1;
-    if (b.prioritas == null) return -1;
-
-    if (a.prioritas !== b.prioritas) {
-      return a.prioritas - b.prioritas;
-    }
-
+    const scoreA = a.ai_score ?? -1;
+    const scoreB = b.ai_score ?? -1;
+    if (scoreB !== scoreA) return scoreB - scoreA;
     return (a.due_date ?? "").localeCompare(b.due_date ?? "");
   });
 }
@@ -36,9 +30,13 @@ export type TaskListItem = {
   due_date: string | null;
   estimated_hours: number | null;
   prioritas: number | null;
+  ai_score: number | null;
+  risk_percentage: number | null;
   tingkat_kesulitan: string | null;
   status: TaskStatus;
 };
+
+type ScheduleMap = Record<string, { start: string; end: string }>;
 
 type TaskListProps = {
   initialTasks: TaskListItem[];
@@ -53,6 +51,8 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
   const [isPrioritizing, setIsPrioritizing] = useState(false);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
   const [activeCount, setActiveCount] = useState(0);
+  const [schedules, setSchedules] = useState<ScheduleMap>({});
+  const [loadingSchedules, setLoadingSchedules] = useState(true);
 
   useEffect(() => {
     setTasks(initialTasks);
@@ -77,7 +77,41 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
     loadPremium();
   }, []);
 
-  const activeTasks = sortTasksByPriority(
+  useEffect(() => {
+    const supabase = createClient();
+    async function loadSchedules() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+
+      const now = new Date();
+      const todayStart = `${now.toISOString().slice(0, 10)}T00:00:00+07:00`;
+      const weekEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const weekEndStr = `${weekEnd.toISOString().slice(0, 10)}T23:59:59+07:00`;
+
+      const { data } = await supabase
+        .from("schedules")
+        .select("task_id,waktu_mulai,waktu_selesai")
+        .eq("user_id", session.user.id)
+        .gte("waktu_mulai", todayStart)
+        .lte("waktu_mulai", weekEndStr)
+        .order("waktu_mulai", { ascending: true });
+
+      const map: ScheduleMap = {};
+      (data ?? []).forEach((s) => {
+        const taskId = String(s.task_id);
+        if (!map[taskId]) {
+          const start = s.waktu_mulai ? format(parseISO(s.waktu_mulai), "HH:mm") : "";
+          const end = s.waktu_selesai ? format(parseISO(s.waktu_selesai), "HH:mm") : "";
+          map[taskId] = { start, end };
+        }
+      });
+      setSchedules(map);
+      setLoadingSchedules(false);
+    }
+    loadSchedules();
+  }, []);
+
+  const activeTasks = sortTasksByAiScore(
     tasks.filter((task) => task.status !== "completed"),
   );
 
@@ -128,7 +162,7 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
       }
 
       setTasks((current) =>
-        sortTasksByPriority(
+        sortTasksByAiScore(
           current.map((task) => {
             const result = data.tasks.find(
               (item: { id: string }) => item.id === task.id,
@@ -138,7 +172,9 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
 
             return {
               ...task,
-              prioritas: result.prioritas,
+              ai_score: result.ai_score,
+              risk_percentage: result.risk_percentage,
+              prioritas: result.ai_score,
               tingkat_kesulitan:
                 result.tingkat_kesulitan != null
                   ? String(result.tingkat_kesulitan)
@@ -163,7 +199,7 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-[#1E2761]">Daftar Tugas</h1>
           <p className="mt-1 text-sm text-slate-600">
-            Tugas diurutkan berdasarkan prioritas AI.
+            Tugas diurutkan berdasarkan skor prioritas AI.
           </p>
 
           <button
@@ -203,37 +239,24 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
         )}
 
         {activeTasks.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center">
-            <p className="text-sm text-slate-600">
-              {tasks.length === 0
-                ? "Belum ada tugas."
-                : "Semua tugas sudah selesai."}
-            </p>
-          </div>
+          <EmptyTasksState />
         ) : (
-          <ul className="space-y-3">
+          <ul className="space-y-4">
             {activeTasks.map((task) => {
-              const badge = getPriorityBadge(
-                task.prioritas,
-                activeTasks.length,
-              );
+              const schedule = schedules[task.id];
 
               return (
-                <li
-                  key={task.id}
-                  className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
+                  <li
+                      key={task.id}
+                      className="card-vibrant rounded-2xl p-4 transition hover:shadow-md"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium text-slate-900">
+                        <p className="font-semibold text-slate-900">
                           {task.title}
                         </p>
-                        <span
-                          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge.className}`}
-                        >
-                          {badge.label}
-                        </span>
+                        <RiskIndicator risk={task.risk_percentage} />
                       </div>
 
                       <p className="mt-1 text-xs text-slate-500">
@@ -256,6 +279,16 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
                             Estimasi: {task.estimated_hours} jam
                           </span>
                         )}
+                        {schedule && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[#1E2761]/10 px-2 py-0.5 text-[#1E2761]">
+                            <Clock3 className="h-3 w-3" />
+                            Jadwal: {schedule.start} - {schedule.end}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mt-4">
+                        <PriorityScoreBar score={task.ai_score} />
                       </div>
                     </div>
                   </div>
@@ -280,7 +313,7 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
 
       <Link
         href="/tugas/tambah"
-        className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#1E2761] text-white shadow-lg shadow-[#1E2761]/30 transition hover:bg-[#028090] focus:outline-none focus:ring-2 focus:ring-[#028090]/40"
+        className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#1E2761] to-[#028090] text-white shadow-lg shadow-[#1E2761]/30 transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#028090]/40"
         aria-label="Tambah tugas"
       >
         <Plus className="h-6 w-6" />

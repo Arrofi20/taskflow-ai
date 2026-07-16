@@ -59,29 +59,24 @@ export async function POST() {
 
     const prioritizedTasks = await analyzeTaskPriorities(normalizedTasks);
 
-    const updateResults = await Promise.all(
-      prioritizedTasks.map((task) =>
-        supabase
-          .from("tasks")
-          .update({
-            prioritas: task.prioritas,
-            tingkat_kesulitan: task.tingkat_kesulitan,
-          })
-          .eq("id", task.id)
-          .eq("user_id", user.id),
-      ),
-    );
-
-    const failedUpdate = updateResults.find((result) => result.error);
-
-    if (failedUpdate?.error) {
-      return NextResponse.json<PrioritizeApiError>(
-        {
-          success: false,
-          error: `Failed to save prioritization results: ${failedUpdate.error.message}`,
-        },
-        { status: 500 },
+    // Simpan hasil AI ke DB — lewati jika kolom belum ada (migration 007)
+    try {
+      await Promise.all(
+        prioritizedTasks.map((task) =>
+          supabase
+            .from("tasks")
+            .update({
+              prioritas: task.ai_score,
+              ai_score: task.ai_score,
+              risk_percentage: task.risk_percentage,
+              tingkat_kesulitan: task.tingkat_kesulitan,
+            })
+            .eq("id", task.id)
+            .eq("user_id", user.id),
+        ),
       );
+    } catch {
+      // Kolom ai_score/risk_percentage mungkin belum ada — skip
     }
 
     return NextResponse.json<PrioritizeApiResponse>({

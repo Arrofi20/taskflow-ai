@@ -1,6 +1,7 @@
 export type TaskForPrioritization = {
   id: string;
   title: string;
+  mata_kuliah?: string | null;
   task_type: string;
   due_date: string | null;
   estimated_hours: number | null;
@@ -9,7 +10,8 @@ export type TaskForPrioritization = {
 
 export type PrioritizedTaskResult = {
   id: string;
-  prioritas: number;
+  ai_score: number;
+  risk_percentage: number;
   tingkat_kesulitan: number;
   alasan: string;
 };
@@ -37,12 +39,14 @@ export type ScheduleGenerationRequest = {
     estimated_hours: number | null;
     task_type: string | null;
     prioritas: number | null;
+    ai_score?: number | null;
   }>;
   freeSlots: Array<{
     day: string;
     start: string;
     end: string;
   }>;
+  productiveHours: number[];
 };
 
 export type GeneratedScheduleItem = {
@@ -63,6 +67,27 @@ export type ScheduleApiResponse = {
 };
 
 export type ScheduleApiError = {
+  success: false;
+  error: string;
+};
+
+export type RiskPredictionResult = {
+  task_id: string;
+  risk_percentage: number;
+  reason: string;
+};
+
+export type AlertApiResponse = {
+  success: true;
+  alerts: Array<{
+    title: string;
+    message: string;
+    severity: string;
+  }>;
+  riskPredictions: RiskPredictionResult[];
+};
+
+export type AlertApiError = {
   success: false;
   error: string;
 };

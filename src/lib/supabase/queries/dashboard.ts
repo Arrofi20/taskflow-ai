@@ -18,6 +18,8 @@ export type DashboardPriorityTask = {
   task_type: string | null;
   deadline: string | null;
   prioritas: number | null;
+  ai_score: number | null;
+  risk_percentage: number | null;
   status: string;
 };
 
@@ -54,7 +56,7 @@ function normalizePriorityTask(record: Record<string, unknown>): DashboardPriori
     id: String(record.id ?? ""),
     title: readStringValue(record, ["nama_tugas", "title"]) ?? "Tugas",
     task_type:
-      taskType && ["tugas", "ujian", "proyek", "presentasi"].includes(taskType)
+      taskType && ["tugas", "ujian", "proyek", "presentasi", "praktikum"].includes(taskType)
         ? taskType
         : null,
     deadline:
@@ -69,6 +71,14 @@ function normalizePriorityTask(record: Record<string, unknown>): DashboardPriori
         : typeof record.priority === "number"
           ? record.priority
           : null,
+    ai_score:
+      typeof record.ai_score === "number"
+        ? record.ai_score
+        : null,
+    risk_percentage:
+      typeof record.risk_percentage === "number"
+        ? record.risk_percentage
+        : null,
     status:
       typeof record.status === "string"
         ? record.status

@@ -14,11 +14,12 @@ const PRIORITIZE_RESPONSE_SCHEMA = {
         type: "object",
         properties: {
           id: { type: "string" },
-          prioritas: { type: "integer" },
+          ai_score: { type: "integer" },
+          risk_percentage: { type: "integer" },
           tingkat_kesulitan: { type: "integer" },
           alasan: { type: "string" },
         },
-        required: ["id", "prioritas", "tingkat_kesulitan", "alasan"],
+        required: ["id", "ai_score", "risk_percentage", "tingkat_kesulitan", "alasan"],
       },
     },
   },
@@ -28,20 +29,21 @@ const PRIORITIZE_RESPONSE_SCHEMA = {
 function buildPrioritizePrompt(tasks: TaskForPrioritization[]) {
   const taskPayload = JSON.stringify(tasks, null, 2);
 
-  return `Anda adalah asisten produktivitas TaskFlow AI. Analisis daftar tugas berikut dan tentukan urutan prioritas pengerjaan.
+  return `Anda adalah asisten produktivitas TaskFlow AI. Analisis daftar tugas mahasiswa berikut dan tentukan skor prioritas dinamis, tingkat kesulitan, dan probabilitas risiko keterlambatan.
 
-Kriteria analisis:
-1. Deadline — tugas dengan deadline lebih dekat mendapat prioritas lebih tinggi.
-2. Jenis tugas — ujian dan presentasi biasanya lebih mendesak daripada tugas biasa.
-3. Estimasi waktu — pertimbangkan beban kerja vs waktu tersisa sebelum deadline.
-4. Tingkat kesulitan — skor 1 (mudah) sampai 10 (sangat sulit) berdasarkan jenis, estimasi jam, dan urgensi.
+Kriteria analisis (simulasi model AI melalui prompt engineering):
+1. Deadline (bobot 35%) — sisa hari hingga deadline. Semakin dekat, skor prioritas dan risiko naik.
+2. Jenis tugas (bobot 20%) — urutan urgensi bawaan: Ujian > Presentasi > Proyek > Praktikum > Tugas.
+3. Estimasi waktu vs sisa waktu (bobot 25%) — jika estimasi pengerjaan mendekati atau melebihi sisa waktu sebelum deadline, skor prioritas dan risiko naik drastis.
+4. Histori keterlambatan implisit (bobot 20%) — anggap tugas dengan jenis serupa dan deadline singkat historis sering terlambat. Tugas pertama kali dengan deadline < 2 hari anggap risiko tinggi.
 
 Aturan output:
-- "prioritas" adalah peringkat urutan (1 = paling prioritas, semakin besar semakin rendah).
+- "ai_score" adalah skor prioritas dinamis 0-100 (0 = rendah, 100 = sangat tinggi).
+- "risk_percentage" adalah probabilitas keterlambatan 0-100%.
+- "tingkat_kesulitan" adalah skor kesulitan 1-10.
 - Setiap tugas pada input HARUS muncul tepat sekali di output.
-- "tingkat_kesulitan" harus antara 1 dan 10.
-- "alasan" singkat dalam Bahasa Indonesia (maksimal 1 kalimat).
 - Jangan menambah atau mengubah id tugas.
+- "alasan" singkat dalam Bahasa Indonesia (maksimal 1 kalimat).
 
 Daftar tugas (JSON):
 ${taskPayload}`;
@@ -71,8 +73,12 @@ function validatePrioritizeResponse(
       throw new Error(`Duplicate task id in Gemini response: ${item.id}`);
     }
 
-    if (!Number.isInteger(item.prioritas) || item.prioritas < 1) {
-      throw new Error(`Invalid prioritas for task ${item.id}.`);
+    if (!Number.isInteger(item.ai_score) || item.ai_score < 0 || item.ai_score > 100) {
+      throw new Error(`Invalid ai_score for task ${item.id}.`);
+    }
+
+    if (!Number.isInteger(item.risk_percentage) || item.risk_percentage < 0 || item.risk_percentage > 100) {
+      throw new Error(`Invalid risk_percentage for task ${item.id}.`);
     }
 
     if (
@@ -86,13 +92,14 @@ function validatePrioritizeResponse(
     seenIds.add(item.id);
     validated.push({
       id: item.id,
-      prioritas: item.prioritas,
+      ai_score: item.ai_score,
+      risk_percentage: item.risk_percentage,
       tingkat_kesulitan: item.tingkat_kesulitan,
       alasan: item.alasan.trim(),
     });
   }
 
-  return validated.sort((a, b) => a.prioritas - b.prioritas);
+  return validated;
 }
 
 export async function analyzeTaskPriorities(tasks: TaskForPrioritization[]) {
