@@ -42,6 +42,7 @@ export async function GET(request: Request) {
   const uniqueUserIds = [...new Set(usersWithSubs.map((s) => s.user_id))];
 
   let sentCount = 0;
+  const debug = { userCount: uniqueUserIds.length, users: [] as unknown[] };
 
   for (const user_id of uniqueUserIds) {
     const { data: allActiveTasks } = await supabase
@@ -51,7 +52,10 @@ export async function GET(request: Request) {
       .neq("status", "completed")
       .order("deadline", { ascending: true });
 
-    if (!allActiveTasks || allActiveTasks.length === 0) continue;
+    if (!allActiveTasks || allActiveTasks.length === 0) {
+      debug.users.push({ user_id, taskCount: 0, reason: "no active tasks" });
+      continue;
+    }
 
     const urgentTasks = allActiveTasks.filter(
       (t) => t.deadline && new Date(t.deadline) <= tomorrow && new Date(t.deadline) >= now,
@@ -62,6 +66,15 @@ export async function GET(request: Request) {
     const upcomingTasks = allActiveTasks.filter(
       (t) => t.deadline && new Date(t.deadline) > tomorrow && new Date(t.deadline) <= nextWeek,
     );
+
+    debug.users.push({
+      user_id,
+      taskCount: allActiveTasks.length,
+      urgent: urgentTasks.length,
+      highRisk: highRiskTasks.length,
+      upcoming: upcomingTasks.length,
+      sampleDeadline: allActiveTasks[0]?.deadline,
+    });
 
     if (urgentTasks.length === 0 && highRiskTasks.length === 0 && upcomingTasks.length === 0) {
       continue;
@@ -116,7 +129,7 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ success: true, sent: sentCount });
+  return NextResponse.json({ success: true, sent: sentCount, debug });
 }
 
 function formatDeadline(deadline: string) {
