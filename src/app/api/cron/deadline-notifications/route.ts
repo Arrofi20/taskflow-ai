@@ -123,8 +123,12 @@ export async function GET(request: Request) {
           }),
         );
         sentCount++;
-      } catch {
-        await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+      } catch (err) {
+        const status = (err as { statusCode?: number })?.statusCode;
+        debug.users.push({ endpoint: sub.endpoint.slice(0, 40), sendError: status ?? String(err) });
+        if (status === 404 || status === 410) {
+          await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+        }
       }
     }
   }
