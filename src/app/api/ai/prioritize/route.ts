@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { analyzeTaskPriorities } from "@/lib/ai/prioritize-tasks";
+import { GeminiRateLimitError } from "@/lib/ai/gemini";
 import type {
   PrioritizeApiError,
   PrioritizeApiResponse,
@@ -102,6 +103,18 @@ export async function POST() {
       tasks: prioritizedTasks,
     });
   } catch (error) {
+    if (error instanceof GeminiRateLimitError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Kuota AI sudah habis. Tunggu sebentar lalu coba lagi, atau upgrade ke Premium untuk akses unlimited.",
+          retry_after: error.retryAfter,
+          code: "RATE_LIMIT",
+        },
+        { status: 429 },
+      );
+    }
+
     const message =
       error instanceof Error
         ? error.message

@@ -2,10 +2,10 @@
 
 import { format, parseISO } from "date-fns";
 import { id as localeId } from "date-fns/locale";
-import { CheckCircle2, Clock3, Crown, Plus, Sparkles, Pencil, Trash2 } from "lucide-react";
+import { CheckCircle2, Clock3, Crown, Plus, RefreshCw, Sparkles, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { EmptyTasksState } from "@/components/tasks/empty-state";
 import { PriorityScoreBar } from "@/components/tasks/priority-score-bar";
@@ -64,11 +64,31 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
   const [activeCount, setActiveCount] = useState(0);
   const [schedules, setSchedules] = useState<ScheduleMap>({});
   const [loadingSchedules, setLoadingSchedules] = useState(true);
+  const [rateLimitRetry, setRateLimitRetry] = useState(0);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     setTasks(initialTasks);
     setActiveCount(initialTasks.filter((t) => t.status !== "completed").length);
   }, [initialTasks]);
+
+  useEffect(() => {
+    if (rateLimitRetry <= 0) return;
+
+    countdownRef.current = setInterval(() => {
+      setRateLimitRetry((prev) => {
+        if (prev <= 1) {
+          if (countdownRef.current) clearInterval(countdownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, [rateLimitRetry]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -242,7 +262,13 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        setActionError(data.error ?? "Gagal generate prioritas AI.");
+        if (data.code === "RATE_LIMIT" || response.status === 429) {
+          const retryAfter = data.retry_after ?? 60;
+          setActionError("Kuota AI habis. Tekan tombol di bawah untuk coba lagi setelah timer selesai.");
+          setRateLimitRetry(retryAfter);
+        } else {
+          setActionError(data.error ?? "Gagal generate prioritas AI.");
+        }
         return;
       }
 
@@ -305,17 +331,34 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
           <button
             type="button"
             onClick={handleGeneratePriorities}
-            disabled={isPrioritizing || activeTasks.length === 0}
+            disabled={isPrioritizing || activeTasks.length === 0 || rateLimitRetry > 0}
             className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#028090]/30 bg-[#028090]/10 px-4 py-3 text-sm font-semibold text-[#028090] transition hover:bg-[#028090]/15 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Sparkles className="h-4 w-4" />
-            {isPrioritizing ? "Menganalisis..." : "Generate AI Prioritas"}
+            {isPrioritizing ? "Menganalisis..." : rateLimitRetry > 0 ? `Tunggu ${rateLimitRetry}s...` : "Generate AI Prioritas"}
           </button>
         </div>
 
         {(fetchError || actionError) && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {fetchError ?? actionError}
+            <p>{fetchError ?? actionError}</p>
+            {rateLimitRetry > 0 && (
+              <div className="mt-3 flex items-center gap-3">
+                <span className="inline-flex items-center gap-1.5 font-mono text-base font-bold text-[#1E2761]">
+                  <Clock3 className="h-4 w-4" />
+                  {rateLimitRetry}s
+                </span>
+                <button
+                  type="button"
+                  onClick={handleGeneratePriorities}
+                  disabled={rateLimitRetry > 0 || isPrioritizing}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#1E2761] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#028090] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${isPrioritizing ? "animate-spin" : ""}`} />
+                  {isPrioritizing ? "Menganalisis..." : "Coba Sekarang"}
+                </button>
+              </div>
+            )}
           </div>
         )}
 

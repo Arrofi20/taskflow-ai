@@ -36,9 +36,23 @@ function getGeminiApiKey() {
   return apiKey;
 }
 
+export class GeminiRateLimitError extends Error {
+  retryAfter: number;
+
+  constructor(message: string, retryAfter: number) {
+    super(message);
+    this.name = "GeminiRateLimitError";
+    this.retryAfter = retryAfter;
+  }
+}
+
+const MAX_RETRIES = 3;
+const BASE_DELAY_MS = 1000;
+
 export async function generateGeminiJson<T>(
   prompt: string,
   responseSchema: Record<string, unknown>,
+  retryCount = 0,
 ): Promise<T> {
   const body: GeminiGenerateRequest = {
     contents: [
@@ -66,9 +80,22 @@ export async function generateGeminiJson<T>(
   const data = (await response.json()) as GeminiGenerateResponse;
 
   if (!response.ok) {
-    throw new Error(
-      data.error?.message ?? `Gemini API request failed (${response.status})`,
-    );
+    const errorMsg = data.error?.message ?? `Gemini API request failed (${response.status})`;
+
+    if (response.status === 429 || errorMsg.includes("quota") || errorMsg.includes("rate")) {
+      if (retryCount < MAX_RETRIES) {
+        const delay = BASE_DELAY_MS * Math.pow(2, retryCount);
+        const retryAfterMatch = errorMsg.match(/retry in (\d+\.?\d*)s/);
+        const retryAfter = retryAfterMatch ? Math.ceil(parseFloat(retryAfterMatch[1])) : Math.ceil(delay / 1000);
+
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        return generateGeminiJson<T>(prompt, responseSchema, retryCount + 1);
+      }
+
+      throw new GeminiRateLimitError(errorMsg, 60);
+    }
+
+    throw new Error(errorMsg);
   }
 
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
