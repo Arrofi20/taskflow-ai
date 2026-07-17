@@ -2,7 +2,7 @@
 
 import { format, parseISO } from "date-fns";
 import { id as localeId } from "date-fns/locale";
-import { CheckCircle2, Clock3, Crown, Plus, RefreshCw, Sparkles, Pencil, Trash2 } from "lucide-react";
+import { CheckCircle2, Clock3, Crown, Plus, RefreshCw, Sparkles, Pencil, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -66,6 +66,7 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
   const [loadingSchedules, setLoadingSchedules] = useState(true);
   const [rateLimitRetry, setRateLimitRetry] = useState(0);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [selectedTask, setSelectedTask] = useState<TaskListItem | null>(null);
 
   useEffect(() => {
     setTasks(initialTasks);
@@ -392,79 +393,54 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
                       key={task.id}
                       className="card-vibrant rounded-2xl p-4 transition hover:shadow-md"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-semibold text-slate-900">
-                          {task.title}
+                  <div
+                    className="cursor-pointer"
+                    onClick={() => setSelectedTask(task)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedTask(task); }}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-semibold text-slate-900">
+                            {task.title}
+                          </p>
+                          <RiskIndicator risk={task.risk_percentage} />
+                        </div>
+
+                        <p className="mt-1 text-xs text-slate-500">
+                          {getTaskTypeLabel(task.task_type)}
+                          {task.tingkat_kesulitan != null &&
+                            ` · Kesulitan ${task.tingkat_kesulitan}`}
                         </p>
-                        <RiskIndicator risk={task.risk_percentage} />
+
+                        <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-600">
+                          {task.due_date && (
+                            <span className="inline-flex items-center gap-1 font-medium text-[#028090]">
+                              <Clock3 className="h-3.5 w-3.5" />
+                              {format(parseISO(task.due_date), "d MMM yyyy, HH:mm", {
+                                locale: localeId,
+                              })}
+                            </span>
+                          )}
+                          {task.estimated_hours != null && (
+                            <span className="inline-flex items-center gap-1">
+                              Estimasi: {task.estimated_hours} jam
+                            </span>
+                          )}
+                          {schedule && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-[#1E2761]/10 px-2 py-0.5 text-[#1E2761]">
+                              <Clock3 className="h-3 w-3" />
+                              Jadwal: {schedule.start} - {schedule.end}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-4">
+                          <PriorityScoreBar score={task.ai_score} />
+                        </div>
                       </div>
-
-                      <p className="mt-1 text-xs text-slate-500">
-                        {getTaskTypeLabel(task.task_type)}
-                        {task.tingkat_kesulitan != null &&
-                          ` · Kesulitan ${task.tingkat_kesulitan}`}
-                      </p>
-
-                      <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-600">
-                        {task.due_date && (
-                          <span className="inline-flex items-center gap-1 font-medium text-[#028090]">
-                            <Clock3 className="h-3.5 w-3.5" />
-                            {format(parseISO(task.due_date), "d MMM yyyy, HH:mm", {
-                              locale: localeId,
-                            })}
-                          </span>
-                        )}
-                        {task.estimated_hours != null && (
-                          <span className="inline-flex items-center gap-1">
-                            Estimasi: {task.estimated_hours} jam
-                          </span>
-                        )}
-                        {schedule && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[#1E2761]/10 px-2 py-0.5 text-[#1E2761]">
-                            <Clock3 className="h-3 w-3" />
-                            Jadwal: {schedule.start} - {schedule.end}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mt-4">
-                        <PriorityScoreBar score={task.ai_score} />
-                      </div>
-
-                      {/* Premium: Detailed Analysis */}
-                      {task.faktor_analisis && (
-                        <div className="mt-3 rounded-xl bg-gradient-to-r from-[#1E2761]/5 to-[#028090]/5 p-2.5 sm:p-3">
-                          <p className="text-[11px] font-semibold text-[#1E2761] sm:text-xs">Analisis Faktor:</p>
-                          <div className="mt-1.5 grid grid-cols-2 gap-1 text-[11px] text-slate-600 sm:gap-1.5 sm:text-xs">
-                            <span>Deadline: {task.faktor_analisis.deadline_weight}%</span>
-                            <span>Jenis: {task.faktor_analisis.jenis_weight}%</span>
-                            <span>Estimasi: {task.faktor_analisis.estimasi_weight}%</span>
-                            <span>Histori: {task.faktor_analisis.histori_weight}%</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {task.rekomendasi_tindakan && (
-                        <div className="mt-2 rounded-lg bg-[#028090]/5 px-2.5 py-2 sm:px-3">
-                          <p className="text-[11px] font-medium text-[#028090] sm:text-xs">Rekomendasi:</p>
-                          <p className="text-[11px] text-slate-600 sm:text-xs">{task.rekomendasi_tindakan}</p>
-                        </div>
-                      )}
-
-                      {task.strategi_mitigasi && (
-                        <div className="mt-2 rounded-lg bg-amber-50 px-2.5 py-2 sm:px-3">
-                          <p className="text-[11px] font-medium text-amber-700 sm:text-xs">Strategi Mitigasi:</p>
-                          <p className="text-[11px] text-slate-600 sm:text-xs">{task.strategi_mitigasi}</p>
-                        </div>
-                      )}
-
-                      {task.waktu_pengerjaan_optimal && (
-                        <div className="mt-2 text-[11px] text-[#028090] sm:text-xs">
-                          <span className="font-medium">Waktu optimal:</span> {task.waktu_pengerjaan_optimal}
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -509,6 +485,114 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
       >
         <Plus className="h-6 w-6" />
       </Link>
+
+      {selectedTask && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
+          onClick={() => setSelectedTask(null)}
+        >
+          <div
+            className="w-full max-w-lg rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-start justify-between">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg font-bold text-[#1E2761]">{selectedTask.title}</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  {getTaskTypeLabel(selectedTask.task_type)}
+                  {selectedTask.tingkat_kesulitan != null && ` · Kesulitan ${selectedTask.tingkat_kesulitan}`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedTask(null)}
+                className="ml-2 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-sm">
+              {selectedTask.due_date && (
+                <div className="flex items-center gap-2 text-slate-700">
+                  <Clock3 className="h-4 w-4 text-[#028090]" />
+                  <span>Deadline: {format(parseISO(selectedTask.due_date), "d MMMM yyyy, HH:mm", { locale: localeId })}</span>
+                </div>
+              )}
+              {selectedTask.estimated_hours != null && (
+                <div className="flex items-center gap-2 text-slate-700">
+                  <Clock3 className="h-4 w-4 text-[#028090]" />
+                  <span>Estimasi: {selectedTask.estimated_hours} jam</span>
+                </div>
+              )}
+              {selectedTask.ai_score != null && (
+                <div className="pt-2">
+                  <PriorityScoreBar score={selectedTask.ai_score} />
+                </div>
+              )}
+
+              {selectedTask.faktor_analisis && (
+                <div className="rounded-xl bg-gradient-to-r from-[#1E2761]/5 to-[#028090]/5 p-3">
+                  <p className="text-xs font-semibold text-[#1E2761]">Analisis Faktor</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                    <span>Deadline: {selectedTask.faktor_analisis.deadline_weight}%</span>
+                    <span>Jenis: {selectedTask.faktor_analisis.jenis_weight}%</span>
+                    <span>Estimasi: {selectedTask.faktor_analisis.estimasi_weight}%</span>
+                    <span>Histori: {selectedTask.faktor_analisis.histori_weight}%</span>
+                  </div>
+                </div>
+              )}
+
+              {selectedTask.rekomendasi_tindakan && (
+                <div className="rounded-lg bg-[#028090]/5 px-3 py-2">
+                  <p className="text-xs font-medium text-[#028090]">Rekomendasi:</p>
+                  <p className="mt-1 text-xs text-slate-600">{selectedTask.rekomendasi_tindakan}</p>
+                </div>
+              )}
+
+              {selectedTask.strategi_mitigasi && (
+                <div className="rounded-lg bg-amber-50 px-3 py-2">
+                  <p className="text-xs font-medium text-amber-700">Strategi Mitigasi:</p>
+                  <p className="mt-1 text-xs text-slate-600">{selectedTask.strategi_mitigasi}</p>
+                </div>
+              )}
+
+              {selectedTask.waktu_pengerjaan_optimal && (
+                <div className="text-xs text-[#028090]">
+                  <span className="font-medium">Waktu optimal:</span> {selectedTask.waktu_pengerjaan_optimal}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setSelectedTask(null); handleMarkComplete(selectedTask.id); }}
+                disabled={completingId === selectedTask.id}
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#1E2761]/15 bg-[#1E2761]/5 px-4 py-3 text-sm font-semibold text-[#1E2761] transition hover:bg-[#1E2761]/10 disabled:opacity-60"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                {completingId === selectedTask.id ? "Menyimpan..." : "Selesai"}
+              </button>
+              <Link
+                href={`/tugas/edit/${selectedTask.id}`}
+                onClick={() => setSelectedTask(null)}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+              >
+                <Pencil className="h-4 w-4" />
+              </Link>
+              <button
+                type="button"
+                onClick={() => { setSelectedTask(null); handleDeleteTask(selectedTask.id); }}
+                disabled={deletingId === selectedTask.id}
+                className="inline-flex items-center justify-center rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-medium text-red-500 transition hover:bg-red-50 disabled:opacity-60"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
