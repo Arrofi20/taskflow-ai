@@ -25,13 +25,7 @@ export function useDeadlineAlerts() {
 
     async function subscribe() {
       try {
-        if (!("Notification" in window)) return;
-        if (Notification.permission === "denied") return;
-
-        if (Notification.permission !== "granted") {
-          const permission = await Notification.requestPermission();
-          if (permission !== "granted") return;
-        }
+        if (Notification.permission !== "granted") return;
 
         const supabase = createClient();
         const {

@@ -12,12 +12,4 @@ let nextConfig = {
   devIndicators: false,
 };
 
-const withPWA = require("next-pwa")({
-  dest: "public",
-  register: true,
-  skipWaiting: true,
-  swSrc: "src/sw.js",
-  disable: process.env.NODE_ENV !== "production",
-});
-
-module.exports = withPWA(nextConfig);
+module.exports = nextConfig;
