@@ -69,8 +69,29 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
   const [selectedTask, setSelectedTask] = useState<TaskListItem | null>(null);
 
   useEffect(() => {
-    setTasks(initialTasks);
-    setActiveCount(initialTasks.filter((t) => t.status !== "completed").length);
+    let cached: Record<string, Record<string, unknown>> = {};
+    try {
+      const raw = localStorage.getItem("taskflow_ai_cache");
+      if (raw) cached = JSON.parse(raw);
+    } catch {}
+
+    const merged = initialTasks.map((task) => {
+      const ai = cached[task.id];
+      if (!ai) return task;
+      return {
+        ...task,
+        ai_score: (ai.ai_score as number) ?? task.ai_score,
+        risk_percentage: (ai.risk_percentage as number) ?? task.risk_percentage,
+        tingkat_kesulitan: (ai.tingkat_kesulitan as string) ?? task.tingkat_kesulitan,
+        faktor_analisis: ai.faktor_analisis ?? task.faktor_analisis,
+        rekomendasi_tindakan: (ai.rekomendasi_tindakan as string) ?? task.rekomendasi_tindakan,
+        strategi_mitigasi: (ai.strategi_mitigasi as string) ?? task.strategi_mitigasi,
+        waktu_pengerjaan_optimal: (ai.waktu_pengerjaan_optimal as string) ?? task.waktu_pengerjaan_optimal,
+      };
+    });
+
+    setTasks(merged);
+    setActiveCount(merged.filter((t) => t.status !== "completed").length);
   }, [initialTasks]);
 
   useEffect(() => {
@@ -272,8 +293,8 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
         return;
       }
 
-      setTasks((current) =>
-        sortTasksByAiScore(
+      setTasks((current) => {
+        const updated = sortTasksByAiScore(
           current.map((task) => {
             const result = data.tasks.find(
               (item: { id: string }) => item.id === task.id,
@@ -296,8 +317,26 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
               waktu_pengerjaan_optimal: result.waktu_pengerjaan_optimal ?? null,
             };
           }),
-        ),
-      );
+        );
+
+        const cache: Record<string, unknown> = {};
+        updated.forEach((t) => {
+          if (t.ai_score != null || t.faktor_analisis) {
+            cache[t.id] = {
+              ai_score: t.ai_score,
+              risk_percentage: t.risk_percentage,
+              tingkat_kesulitan: t.tingkat_kesulitan,
+              faktor_analisis: t.faktor_analisis,
+              rekomendasi_tindakan: t.rekomendasi_tindakan,
+              strategi_mitigasi: t.strategi_mitigasi,
+              waktu_pengerjaan_optimal: t.waktu_pengerjaan_optimal,
+            };
+          }
+        });
+        localStorage.setItem("taskflow_ai_cache", JSON.stringify(cache));
+
+        return updated;
+      });
 
       // Log activity
       fetch("/api/activity/history/log", {
