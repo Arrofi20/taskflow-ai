@@ -77,12 +77,12 @@ export default async function DashboardPage() {
       </header>
 
       <main className="-mt-5 space-y-5 px-4 sm:space-y-6 sm:px-8 lg:space-y-8">
-        <AlertBanner />
         <SummaryCards
           totalTasks={dashboard.summary.totalTasks}
           tasksToday={dashboard.summary.tasksToday}
           approachingDeadline={dashboard.summary.approachingDeadline}
         />
+        <AlertBanner />
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
           <PriorityTasks tasks={dashboard.priorityTasks} />
           <TodaySchedule

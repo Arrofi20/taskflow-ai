@@ -42,19 +42,19 @@ export function AlertBanner() {
   }
 
   return (
-    <section className="animate-pop-in rounded-2xl bg-gradient-to-r from-[#fff0ee] via-[#fff5f5] to-[#fff0ee] p-4 shadow-md shadow-[#ff6b6b]/10">
+    <section className="card-vibrant rounded-2xl p-4">
       <div className="flex items-start gap-3">
         <div className={`rounded-xl bg-gradient-to-br ${getSeverityColor(alerts[0]?.severity)} p-2 text-white shadow-sm`}>
           {getSeverityIcon(alerts[0]?.severity)}
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold text-[#cc4444]">Prediksi Risiko AI</p>
+            <p className="text-sm font-semibold text-[#1E2761]">Prediksi Risiko AI</p>
             <Sparkles size={14} className="text-[#028090]" />
           </div>
           <div className="mt-2 space-y-2">
             {alerts.map((alert, index) => (
-              <div key={`${alert.title}-${index}`} className="rounded-xl bg-white/85 p-3 shadow-sm backdrop-blur-sm">
+              <div key={`${alert.title}-${index}`} className="rounded-xl bg-slate-50 p-3">
                 <div className="flex items-center gap-2">
                   {getSeverityIcon(alert.severity)}
                   <p className="text-sm font-semibold text-[#1E2761]">{alert.title}</p>
