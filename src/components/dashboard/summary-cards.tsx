@@ -57,24 +57,24 @@ export function SummaryCards({ totalTasks, tasksToday, approachingDeadline }: Su
   const values = { totalTasks, tasksToday, approachingDeadline };
 
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-3 gap-2 sm:gap-3">
       {cardConfig.map(({ key, label, gradient, iconBg, icon: Icon }) => (
         <div
           key={key}
-          className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} p-4 shadow-lg shadow-slate-200/60 transition hover:scale-[1.02] hover:shadow-xl`}
+          className={`group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br ${gradient} p-2.5 sm:p-4 shadow-lg shadow-slate-200/60 transition hover:scale-[1.02] hover:shadow-xl`}
         >
           <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/8 opacity-60 transition group-hover:scale-110" />
           <div className="absolute -bottom-6 -left-6 h-20 w-20 rounded-full bg-white/8 opacity-40 transition group-hover:scale-110" />
           <div className="absolute -right-12 -bottom-12 h-32 w-32 rounded-full bg-white/5" />
-          <div className="relative flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium text-white/75">{label}</p>
-              <p className="mt-1 text-3xl font-bold text-white drop-shadow-sm">
+          <div className="relative flex items-start justify-between gap-1.5 sm:gap-3">
+            <div className="min-w-0">
+              <p className="text-[11px] sm:text-sm font-medium text-white/75 leading-tight">{label}</p>
+              <p className="mt-0.5 text-2xl sm:text-3xl font-bold text-white drop-shadow-sm">
                 <AnimatedNumber value={values[key]} />
               </p>
             </div>
-            <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${iconBg} backdrop-blur-sm text-white transition group-hover:scale-110 group-hover:rotate-3`}>
-              <Icon className="h-5 w-5" />
+            <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10 sm:rounded-xl ${iconBg} backdrop-blur-sm text-white transition group-hover:scale-110 group-hover:rotate-3`}>
+              <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
             </span>
           </div>
         </div>
