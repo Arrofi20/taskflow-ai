@@ -298,7 +298,6 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
           }),
         ),
       );
-      router.refresh();
 
       // Log activity
       fetch("/api/activity/history/log", {
