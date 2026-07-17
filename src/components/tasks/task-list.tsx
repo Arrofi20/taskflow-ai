@@ -192,7 +192,7 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
 
       setTasks((current) =>
         current.map((task) =>
-          task.id === taskId ? { ...task, status: "completed" } : task,
+          task.id === taskId ? { ...task, status: "completed", completed_at: now.toISOString() } : task,
         ),
       );
       setActiveCount((c) => Math.max(0, c - 1));
@@ -208,8 +208,6 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
           detail: { task_name: taskName },
         }),
       }).catch(() => {});
-
-      router.refresh();
     } catch {
       setActionError("Gagal menandai tugas selesai.");
     } finally {
@@ -248,8 +246,6 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
           detail: { task_name: taskName },
         }),
       }).catch(() => {});
-
-      router.refresh();
     } catch {
       setActionError("Gagal menghapus tugas.");
     } finally {
