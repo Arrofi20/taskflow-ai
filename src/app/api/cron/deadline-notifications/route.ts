@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import webpush from "web-push";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
-import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/supabase/database.types";
 
 const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY ?? "";
 const cronSecret = process.env.CRON_SECRET ?? "";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
 if (vapidPublicKey && vapidPrivateKey) {
   webpush.setVapidDetails(
@@ -13,6 +16,12 @@ if (vapidPublicKey && vapidPrivateKey) {
     vapidPublicKey,
     vapidPrivateKey,
   );
+}
+
+function getServiceClient() {
+  return createSupabaseClient<Database>(supabaseUrl, supabaseServiceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 }
 
 export async function GET(request: Request) {
@@ -25,7 +34,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, error: "VAPID keys not configured" }, { status: 500 });
   }
 
-  const supabase = await createClient();
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return NextResponse.json({ success: false, error: "Supabase service key not configured" }, { status: 500 });
+  }
+
+  const supabase = getServiceClient();
 
   const now = new Date();
   const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
