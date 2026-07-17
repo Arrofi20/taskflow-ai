@@ -86,11 +86,11 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
           ai_score: (ai.ai_score as number) ?? task.ai_score,
           risk_percentage: (ai.risk_percentage as number) ?? task.risk_percentage,
           tingkat_kesulitan: (ai.tingkat_kesulitan as string) ?? task.tingkat_kesulitan,
-          faktor_analisis: ai.faktor_analisis ?? task.faktor_analisis,
+          faktor_analisis: (ai.faktor_analisis as TaskListItem["faktor_analisis"]) ?? task.faktor_analisis,
           rekomendasi_tindakan: (ai.rekomendasi_tindakan as string) ?? task.rekomendasi_tindakan,
           strategi_mitigasi: (ai.strategi_mitigasi as string) ?? task.strategi_mitigasi,
           waktu_pengerjaan_optimal: (ai.waktu_pengerjaan_optimal as string) ?? task.waktu_pengerjaan_optimal,
-        };
+        } as TaskListItem;
       });
     }
 
