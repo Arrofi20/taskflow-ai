@@ -3,10 +3,23 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronRight, Clock3, Edit3, Mail, ShieldCheck, Gift, Zap, History } from "lucide-react";
+import { ChevronRight, Clock3, Edit3, Mail, ShieldCheck, Gift, Zap, History, Bell } from "lucide-react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { createClient } from "@/lib/supabase/client";
+
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
 
 export default function ProfilPage() {
   const router = useRouter();
@@ -20,6 +33,8 @@ export default function ProfilPage() {
   const [savingName, setSavingName] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notifStatus, setNotifStatus] = useState<string>("");
+  const [notifLoading, setNotifLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -86,6 +101,67 @@ export default function ProfilPage() {
     setFullName(nextName);
     setIsEditingName(false);
     setMessage("Nama berhasil diperbarui.");
+  }
+
+  async function enableNotifications() {
+    setNotifLoading(true);
+    setNotifStatus("");
+    try {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+        setNotifStatus("Browser tidak mendukung notifikasi push.");
+        return;
+      }
+      if (!VAPID_PUBLIC_KEY) {
+        setNotifStatus("VAPID key belum dikonfigurasi.");
+        return;
+      }
+
+      let permission = Notification.permission;
+      if (permission === "denied") {
+        setNotifStatus("Notifikasi diblokir. Izinkan lewat pengaturan browser lalu refresh.");
+        return;
+      }
+      if (permission !== "granted") {
+        permission = await Notification.requestPermission();
+      }
+      if (permission !== "granted") {
+        setNotifStatus("Izin notifikasi ditolak. Coba lagi dan pilih Izinkan.");
+        return;
+      }
+
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.ready;
+
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+      const sub = subscription.toJSON();
+      if (!sub.endpoint || !sub.keys?.p256dh || !sub.keys?.auth) {
+        setNotifStatus("Gagal membuat subscription.");
+        return;
+      }
+
+      const res = await fetch("/api/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          endpoint: sub.endpoint,
+          p256dh: sub.keys.p256dh,
+          auth: sub.keys.auth,
+        }),
+      });
+
+      if (res.ok) {
+        setNotifStatus("Notifikasi berhasil diaktifkan! Tes notif akan masuk tiap 6 jam.");
+      } else {
+        setNotifStatus("Gagal menyimpan subscription (kode " + res.status + ").");
+      }
+    } catch (err) {
+      setNotifStatus("Terjadi error: " + (err instanceof Error ? err.message : "unknown"));
+    } finally {
+      setNotifLoading(false);
+    }
   }
 
   return (
@@ -245,6 +321,31 @@ export default function ProfilPage() {
             </div>
             <ChevronRight size={18} className="text-slate-300" />
           </Link>
+        </section>
+
+        <section className="card-vibrant rounded-3xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-2xl bg-gradient-to-br from-[#028090]/10 to-[#03a3b5]/10 p-2 text-[#028090]">
+              <Bell size={18} />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-[#1E2761]">Notifikasi Push</p>
+              <p className="text-xs text-slate-400">Aktifkan agar dapat pengingat deadline di HP</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={enableNotifications}
+            disabled={notifLoading}
+            className="mt-3 w-full rounded-2xl gradient-bright-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm"
+          >
+            {notifLoading ? "Memproses..." : "Aktifkan Notifikasi"}
+          </button>
+          {notifStatus ? (
+            <p className="mt-3 rounded-xl bg-gradient-to-r from-slate-50 to-slate-100 px-3 py-2 text-sm text-slate-600">
+              {notifStatus}
+            </p>
+          ) : null}
         </section>
 
         <div className="card-vibrant rounded-3xl p-2">
