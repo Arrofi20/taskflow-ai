@@ -117,7 +117,7 @@ export default function EditTaskPage() {
         mata_kuliah: values.mataKuliah.trim() || null,
         jenis_tugas: values.taskType || "tugas",
         deadline: `${values.deadlineDate}T${values.deadlineTime}:00+07:00`,
-        estimasi_waktu: Number(values.estimatedHours),
+        estimasi_waktu: Math.round(Number(values.estimatedHours)),
       })
       .eq("id", taskId)
       .eq("user_id", user.id);

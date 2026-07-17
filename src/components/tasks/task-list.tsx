@@ -165,7 +165,7 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
       if (taskData?.created_at) {
         const created = new Date(taskData.created_at);
         const diffMs = now.getTime() - created.getTime();
-        actualHours = Math.round((diffMs / (1000 * 60 * 60)) * 10) / 10; // round to 1 decimal
+        actualHours = Math.round(diffMs / (1000 * 60 * 60));
         // If less than 0.5 hours, use estimasi_waktu as fallback
         if (actualHours < 0.5 && taskData.estimasi_waktu) {
           actualHours = taskData.estimasi_waktu;

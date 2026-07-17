@@ -84,10 +84,10 @@ export async function POST() {
           supabase
             .from("tasks")
             .update({
-              prioritas: task.ai_score,
-              ai_score: task.ai_score,
-              risk_percentage: task.risk_percentage,
-              tingkat_kesulitan: task.tingkat_kesulitan,
+              prioritas: Math.round(task.ai_score),
+              ai_score: Math.round(task.ai_score),
+              risk_percentage: Math.round(task.risk_percentage),
+              tingkat_kesulitan: task.tingkat_kesulitan != null ? Math.round(Number(task.tingkat_kesulitan)) : null,
             })
             .eq("id", task.id)
             .eq("user_id", user.id),
