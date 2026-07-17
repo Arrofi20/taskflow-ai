@@ -439,6 +439,7 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
 
                         <div className="mt-4">
                           <PriorityScoreBar score={task.ai_score} />
+                          <p className="mt-2 text-[11px] font-medium text-[#028090] sm:text-xs">Lihat detail &rarr;</p>
                         </div>
                       </div>
                     </div>
