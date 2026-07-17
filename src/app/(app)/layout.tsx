@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ActivityTracker } from "@/components/app/activity-tracker";
 import { BottomNav } from "@/components/app/bottom-nav";
 import { NotificationProvider } from "@/components/app/notification-provider";
+import { ScrollReset } from "@/components/app/scroll-reset";
 import { createClient } from "@/lib/supabase/server";
 
 const appShellClassName =
@@ -22,6 +23,7 @@ export default async function AppLayout({
 
   return (
     <NotificationProvider>
+      <ScrollReset />
       <div className="flex min-h-full flex-1 flex-col">
         <ActivityTracker />
         <div className={appShellClassName}>{children}</div>

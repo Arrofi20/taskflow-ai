@@ -78,6 +78,7 @@ export function BottomNav() {
       setTimeout(() => router.push("/profil/subscription"), 800);
       return;
     }
+    window.scrollTo({ top: 0, behavior: "instant" });
     router.push(href);
   }
 
