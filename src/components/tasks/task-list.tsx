@@ -2,7 +2,7 @@
 
 import { format, parseISO } from "date-fns";
 import { id as localeId } from "date-fns/locale";
-import { CheckCircle2, Clock3, Crown, Plus, RefreshCw, Sparkles, Pencil, Trash2, X } from "lucide-react";
+import { CheckCircle2, Clock3, Crown, Plus, RefreshCw, Sparkles, Pencil, Trash2, X, Lock } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -532,36 +532,58 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
                 </div>
               )}
 
-              {selectedTask.faktor_analisis && (
-                <div className="rounded-xl bg-gradient-to-r from-[#1E2761]/5 to-[#028090]/5 p-3">
-                  <p className="text-xs font-semibold text-[#1E2761]">Analisis Faktor</p>
-                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-600">
-                    <span>Deadline: {selectedTask.faktor_analisis.deadline_weight}%</span>
-                    <span>Jenis: {selectedTask.faktor_analisis.jenis_weight}%</span>
-                    <span>Estimasi: {selectedTask.faktor_analisis.estimasi_weight}%</span>
-                    <span>Histori: {selectedTask.faktor_analisis.histori_weight}%</span>
+              {isPremium === false ? (
+                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4">
+                  <div className="flex items-center gap-2 text-slate-500">
+                    <Lock className="h-4 w-4" />
+                    <p className="text-xs font-semibold">Analisis Premium</p>
+                    <Crown size={14} className="text-amber-500" />
                   </div>
+                  <p className="mt-2 text-xs text-slate-400">
+                    Upgrade ke Premium untuk melihat analisis faktor, rekomendasi, strategi mitigasi, dan waktu optimal.
+                  </p>
+                  <Link
+                    href="/profil/subscription"
+                    onClick={() => setSelectedTask(null)}
+                    className="mt-3 inline-block rounded-lg bg-[#1E2761] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#028090]"
+                  >
+                    Upgrade ke Premium
+                  </Link>
                 </div>
-              )}
+              ) : (
+                <>
+                  {selectedTask.faktor_analisis && (
+                    <div className="rounded-xl bg-gradient-to-r from-[#1E2761]/5 to-[#028090]/5 p-3">
+                      <p className="text-xs font-semibold text-[#1E2761]">Analisis Faktor</p>
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                        <span>Deadline: {selectedTask.faktor_analisis.deadline_weight}%</span>
+                        <span>Jenis: {selectedTask.faktor_analisis.jenis_weight}%</span>
+                        <span>Estimasi: {selectedTask.faktor_analisis.estimasi_weight}%</span>
+                        <span>Histori: {selectedTask.faktor_analisis.histori_weight}%</span>
+                      </div>
+                    </div>
+                  )}
 
-              {selectedTask.rekomendasi_tindakan && (
-                <div className="rounded-lg bg-[#028090]/5 px-3 py-2">
-                  <p className="text-xs font-medium text-[#028090]">Rekomendasi:</p>
-                  <p className="mt-1 text-xs text-slate-600">{selectedTask.rekomendasi_tindakan}</p>
-                </div>
-              )}
+                  {selectedTask.rekomendasi_tindakan && (
+                    <div className="rounded-lg bg-[#028090]/5 px-3 py-2">
+                      <p className="text-xs font-medium text-[#028090]">Rekomendasi:</p>
+                      <p className="mt-1 text-xs text-slate-600">{selectedTask.rekomendasi_tindakan}</p>
+                    </div>
+                  )}
 
-              {selectedTask.strategi_mitigasi && (
-                <div className="rounded-lg bg-amber-50 px-3 py-2">
-                  <p className="text-xs font-medium text-amber-700">Strategi Mitigasi:</p>
-                  <p className="mt-1 text-xs text-slate-600">{selectedTask.strategi_mitigasi}</p>
-                </div>
-              )}
+                  {selectedTask.strategi_mitigasi && (
+                    <div className="rounded-lg bg-amber-50 px-3 py-2">
+                      <p className="text-xs font-medium text-amber-700">Strategi Mitigasi:</p>
+                      <p className="mt-1 text-xs text-slate-600">{selectedTask.strategi_mitigasi}</p>
+                    </div>
+                  )}
 
-              {selectedTask.waktu_pengerjaan_optimal && (
-                <div className="text-xs text-[#028090]">
-                  <span className="font-medium">Waktu optimal:</span> {selectedTask.waktu_pengerjaan_optimal}
-                </div>
+                  {selectedTask.waktu_pengerjaan_optimal && (
+                    <div className="text-xs text-[#028090]">
+                      <span className="font-medium">Waktu optimal:</span> {selectedTask.waktu_pengerjaan_optimal}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
