@@ -148,11 +148,15 @@ export async function getDashboardData(
   fallbackName?: string | null,
 ): Promise<DashboardData> {
   const now = new Date();
-  const todayStr = format(now, "yyyy-MM-dd");
+  const wibOffset = 7 * 60 * 60 * 1000;
+  const nowWib = new Date(now.getTime() + wibOffset);
+  const todayStr = format(nowWib, "yyyy-MM-dd");
   const todayStart = `${todayStr}T00:00:00+07:00`;
   const todayEnd = `${todayStr}T23:59:59+07:00`;
-  const deadlineEndStr = format(addDays(now, 3), "yyyy-MM-dd");
+  const deadlineEndWib = new Date(nowWib.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const deadlineEndStr = format(deadlineEndWib, "yyyy-MM-dd");
   const deadlineEnd = `${deadlineEndStr}T23:59:59+07:00`;
+  const nowIsoWib = `${todayStr}T${String(nowWib.getHours()).padStart(2, "0")}:${String(nowWib.getMinutes()).padStart(2, "0")}:${String(nowWib.getSeconds()).padStart(2, "0")}+07:00`;
 
   const [
     totalTasksResult,
@@ -178,7 +182,7 @@ export async function getDashboardData(
       .select("*", { count: "exact", head: true })
       .eq("user_id", userId)
       .neq("status", "completed")
-      .gte("deadline", now.toISOString())
+      .gte("deadline", nowIsoWib)
       .lte("deadline", deadlineEnd),
     supabase
       .from("tasks")

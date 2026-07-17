@@ -116,8 +116,11 @@ export function TaskList({ initialTasks, fetchError }: TaskListProps) {
       if (!session?.user) return;
 
       const now = new Date();
-      const todayStart = `${now.toISOString().slice(0, 10)}T00:00:00+07:00`;
-      const weekEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const wibOffset = 7 * 60 * 60 * 1000;
+      const nowWib = new Date(now.getTime() + wibOffset);
+      const todayStr = nowWib.toISOString().slice(0, 10);
+      const todayStart = `${todayStr}T00:00:00+07:00`;
+      const weekEnd = new Date(nowWib.getTime() + 7 * 24 * 60 * 60 * 1000);
       const weekEndStr = `${weekEnd.toISOString().slice(0, 10)}T23:59:59+07:00`;
 
       const { data } = await supabase

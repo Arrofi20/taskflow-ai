@@ -61,9 +61,13 @@ export default function EditTaskPage() {
       let deadlineTime = "";
       if (data.deadline) {
         const d = new Date(data.deadline);
-        deadlineDate = d.toISOString().slice(0, 10);
-        deadlineTime =
-          `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        const hours = String(d.getHours()).padStart(2, "0");
+        const minutes = String(d.getMinutes()).padStart(2, "0");
+        deadlineDate = `${year}-${month}-${day}`;
+        deadlineTime = `${hours}:${minutes}`;
       }
 
       setValues({

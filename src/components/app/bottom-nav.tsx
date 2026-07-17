@@ -50,14 +50,18 @@ export function BottomNav() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
       const now = new Date();
-      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      const wibOffset = 7 * 60 * 60 * 1000;
+      const nowWib = new Date(now.getTime() + wibOffset);
+      const todayStr = nowWib.toISOString().slice(0, 10);
+      const tomorrow = new Date(nowWib.getTime() + 24 * 60 * 60 * 1000);
+      const tomorrowStr = tomorrow.toISOString().slice(0, 10);
       const { count } = await supabase
         .from("tasks")
         .select("*", { count: "exact", head: true })
         .eq("user_id", session.user.id)
         .neq("status", "completed")
-        .gte("deadline", now.toISOString())
-        .lte("deadline", tomorrow.toISOString());
+        .gte("deadline", `${todayStr}T00:00:00+07:00`)
+        .lte("deadline", `${tomorrowStr}T23:59:59+07:00`);
       setUrgentCount(count ?? 0);
     }
 
