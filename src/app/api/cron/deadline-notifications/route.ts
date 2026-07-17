@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY ?? "";
+const cronSecret = process.env.CRON_SECRET ?? "";
 
 if (vapidPublicKey && vapidPrivateKey) {
   webpush.setVapidDetails(
@@ -14,13 +15,15 @@ if (vapidPublicKey && vapidPrivateKey) {
   );
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Auth check for cron
+  const authHeader = request.headers.get("Authorization");
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     if (!vapidPublicKey || !vapidPrivateKey) {
-      return NextResponse.json({ success: false, error: "VAPID keys not configured" }, { status: 500 });
-    }
-
-    const supabase = await createClient();
 
     const now = new Date();
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);

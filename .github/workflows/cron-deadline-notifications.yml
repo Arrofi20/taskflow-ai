@@ -1,0 +1,21 @@
+name: Deadline Notifications Cron
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Tiap 6 jam
+  workflow_dispatch:  # Bisa manual trigger
+
+jobs:
+  send-notifications:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Call cron endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -X GET "https://taskflow-ai.vercel.app/api/cron/deadline-notifications" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            --max-time 300 \
+            -v
