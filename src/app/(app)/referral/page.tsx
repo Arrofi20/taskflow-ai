@@ -71,7 +71,7 @@ export default function ReferralPage() {
   async function handleShare() {
     const shareData = {
       title: "TaskFlow AI - Undangan",
-      text: `Daftar TaskFlow AI pakai kode referralku ${referralCode} dan kelola tugas lebih cerdas!`,
+      text: `Daftar TaskFlow AI pakai kode referralku ${referralCode} dan belajar lebih cerdas!`,
       url: typeof window !== "undefined" ? window.location.origin : "",
     };
 

@@ -6,6 +6,7 @@ import type {
   PrioritizeApiResponse,
 } from "@/lib/ai/types";
 import { createClient } from "@/lib/supabase/server";
+import { getIsPremium } from "@/lib/premium";
 
 export async function POST() {
   try {
@@ -21,6 +22,8 @@ export async function POST() {
         { status: 401 },
       );
     }
+
+    const isPremium = await getIsPremium(supabase, user.id);
 
     const { data: tasks, error: tasksError } = await supabase
       .from("tasks")
@@ -57,7 +60,21 @@ export async function POST() {
       status: task.status,
     }));
 
-    const prioritizedTasks = await analyzeTaskPriorities(normalizedTasks);
+    // Premium: Fetch task history for enhanced analysis
+    let taskHistory: Array<{ jenis_tugas: string; status: string; estimasi_waktu: number | null; completed_at: string | null; created_at: string }> | undefined;
+
+    if (isPremium) {
+      const { data: historyTasks } = await supabase
+        .from("tasks")
+        .select("jenis_tugas,status,estimasi_waktu,completed_at,created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(30);
+
+      taskHistory = historyTasks ?? undefined;
+    }
+
+    const prioritizedTasks = await analyzeTaskPriorities(normalizedTasks, isPremium, taskHistory);
 
     // Simpan hasil AI ke DB — lewati jika kolom belum ada (migration 007)
     try {

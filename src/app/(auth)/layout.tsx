@@ -12,9 +12,11 @@ export default function AuthLayout({
           href="/"
           className="inline-flex items-center gap-2 text-white transition-opacity hover:opacity-90"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/15 text-sm font-bold">
-            TF
-          </span>
+          <img
+            src="/logo.png"
+            alt="TaskFlow AI"
+            className="h-9 w-9 rounded-lg shadow-sm"
+          />
           <span className="text-lg font-semibold tracking-tight">TaskFlow AI</span>
         </Link>
       </header>

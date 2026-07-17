@@ -3,6 +3,7 @@ import { parseISO } from "date-fns";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/database.types";
+import { getIsPremium } from "@/lib/premium";
 
 type AppSupabaseClient = SupabaseClient<Database>;
 
@@ -28,6 +29,11 @@ export type DashboardScheduleItem = {
   title: string;
   start_time: string | null;
   end_time: string | null;
+  rekomendasi_ai: string | null;
+  // Premium fields
+  durasi_istirahat?: number | null;
+  energi_level?: "tinggi" | "sedang" | "rendah" | null;
+  tips_fokus?: string | null;
 };
 
 export type DashboardData = {
@@ -35,6 +41,13 @@ export type DashboardData = {
   summary: DashboardSummary;
   priorityTasks: DashboardPriorityTask[];
   todaySchedule: DashboardScheduleItem[];
+  // Premium fields
+  analisisGayaBelajar?: {
+    tipe_belajar: string;
+    jam_optimal: string[];
+    pola_belajar: string;
+  } | null;
+  rekomendasiUmum?: string[] | null;
 };
 
 function readStringValue(record: Record<string, unknown>, keys: string[]) {
@@ -122,6 +135,10 @@ function normalizeScheduleItem(record: Record<string, unknown>): DashboardSchedu
       "Jadwal",
     start_time: startTime,
     end_time: endTime,
+    rekomendasi_ai: typeof record.rekomendasi_ai === "string" ? record.rekomendasi_ai : null,
+    durasi_istirahat: typeof record.durasi_istirahat === "number" ? record.durasi_istirahat : null,
+    energi_level: typeof record.energi_level === "string" ? record.energi_level as "tinggi" | "sedang" | "rendah" : null,
+    tips_fokus: typeof record.tips_fokus === "string" ? record.tips_fokus : null,
   };
 }
 
@@ -165,7 +182,7 @@ export async function getDashboardData(
       .lte("deadline", deadlineEnd),
     supabase
       .from("tasks")
-      .select("id,nama_tugas,jenis_tugas,deadline,prioritas,status")
+      .select("id,nama_tugas,jenis_tugas,deadline,prioritas,ai_score,risk_percentage,status")
       .eq("user_id", userId)
       .neq("status", "completed")
       .order("prioritas", { ascending: true, nullsFirst: true })
@@ -173,7 +190,7 @@ export async function getDashboardData(
       .limit(3),
     supabase
       .from("schedules")
-      .select("id, waktu_mulai, waktu_selesai, tasks!inner(nama_tugas)")
+      .select("id, waktu_mulai, waktu_selesai, rekomendasi_ai, tasks!inner(nama_tugas)")
       .eq("user_id", userId)
       .gte("waktu_mulai", todayStart)
       .lte("waktu_mulai", todayEnd)
@@ -182,6 +199,27 @@ export async function getDashboardData(
   ]);
 
   const fullName = fallbackName ?? "Pengguna";
+
+  // Check premium status
+  const isPremium = await getIsPremium(supabase, userId);
+
+  let analisisGayaBelajar: DashboardData["analisisGayaBelajar"] = null;
+  let rekomendasiUmum: DashboardData["rekomendasiUmum"] = null;
+
+  if (isPremium) {
+    // Fetch latest schedule generation result for learning style analysis
+    const { data: latestSchedule } = await supabase
+      .from("schedules")
+      .select("created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    // For now, we'll use a placeholder - in production, this would come from the AI response
+    // The actual data is stored in the schedule generation response and passed to the client
+    // We'll fetch it from the client-side after schedule generation
+  }
 
   return {
     fullName,
@@ -196,5 +234,7 @@ export async function getDashboardData(
     todaySchedule: (todayScheduleResult.data ?? []).map((record) =>
       normalizeScheduleItem(record as Record<string, unknown>),
     ),
+    analisisGayaBelajar,
+    rekomendasiUmum,
   };
 }

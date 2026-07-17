@@ -6,7 +6,7 @@ import { NotificationProvider } from "@/components/app/notification-provider";
 import { createClient } from "@/lib/supabase/server";
 
 const appShellClassName =
-  "mx-auto flex w-full max-w-lg flex-1 flex-col pb-24 sm:max-w-2xl lg:max-w-5xl xl:max-w-6xl";
+  "mx-auto flex w-full max-w-lg flex-1 flex-col pb-28 sm:max-w-2xl lg:max-w-5xl xl:max-w-6xl";
 
 export default async function AppLayout({
   children,

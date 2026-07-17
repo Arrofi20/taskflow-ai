@@ -52,9 +52,11 @@ export default async function DashboardPage() {
 
         <div className="relative">
           <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/20 text-sm font-bold backdrop-blur-sm sm:h-10 sm:w-10">
-              TF
-            </span>
+            <img
+              src="/logo.png"
+              alt="TaskFlow AI"
+              className="h-9 w-9 rounded-lg shadow-sm sm:h-10 sm:w-10"
+            />
             <span className="text-lg font-semibold sm:text-xl">TaskFlow AI</span>
           </div>
           <h1 className="mt-6 text-2xl font-bold leading-tight sm:mt-8 sm:text-3xl lg:text-4xl">
@@ -81,7 +83,11 @@ export default async function DashboardPage() {
         />
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
           <PriorityTasks tasks={dashboard.priorityTasks} />
-          <TodaySchedule schedules={dashboard.todaySchedule} />
+          <TodaySchedule
+            schedules={dashboard.todaySchedule}
+            analisisGayaBelajar={dashboard.analisisGayaBelajar}
+            rekomendasiUmum={dashboard.rekomendasiUmum}
+          />
         </div>
       </main>
     </>

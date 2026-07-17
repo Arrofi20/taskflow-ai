@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronRight, Clock3, Edit3, Mail, ShieldCheck, Gift, Zap } from "lucide-react";
+import { ChevronRight, Clock3, Edit3, Mail, ShieldCheck, Gift, Zap, History } from "lucide-react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { createClient } from "@/lib/supabase/client";
@@ -225,6 +225,22 @@ export default function ProfilPage() {
               <div>
                 <p className="font-semibold text-[#1E2761]">Referral</p>
                 <p className="text-xs text-slate-400">Ajak teman dan dapatkan premium gratis</p>
+              </div>
+            </div>
+            <ChevronRight size={18} className="text-slate-300" />
+          </Link>
+
+          <Link
+            href="/riwayat"
+            className="card-vibrant flex items-center justify-between rounded-2xl px-4 py-3"
+          >
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-gradient-to-br from-slate-500/10 to-slate-600/10 p-2 text-slate-600">
+                <History size={18} />
+              </div>
+              <div>
+                <p className="font-semibold text-[#1E2761]">Riwayat Aktivitas</p>
+                <p className="text-xs text-slate-400">Lihat semua aktivitas Anda</p>
               </div>
             </div>
             <ChevronRight size={18} className="text-slate-300" />

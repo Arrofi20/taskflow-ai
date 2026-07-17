@@ -341,6 +341,69 @@ export type Database = {
         };
         Relationships: [];
       };
+      google_tokens: {
+        Row: {
+          id: string;
+          user_id: string;
+          access_token: string;
+          refresh_token: string | null;
+          expires_at: string;
+          calendar_id: string | null;
+          sync_enabled: boolean | null;
+          last_synced_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          access_token: string;
+          refresh_token?: string | null;
+          expires_at: string;
+          calendar_id?: string | null;
+          sync_enabled?: boolean | null;
+          last_synced_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          access_token?: string;
+          refresh_token?: string | null;
+          expires_at?: string;
+          calendar_id?: string | null;
+          sync_enabled?: boolean | null;
+          last_synced_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      activity_history: {
+        Row: {
+          id: string;
+          user_id: string;
+          action: string;
+          category: string;
+          detail: Record<string, unknown> | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          action: string;
+          category?: string;
+          detail?: Record<string, unknown> | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          action?: string;
+          category?: string;
+          detail?: Record<string, unknown> | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -356,6 +419,6 @@ export type AlertItem = Database["public"]["Tables"]["alerts"]["Row"];
 export type UserProfile = Database["public"]["Tables"]["users"]["Row"];
 export type Referral = Database["public"]["Tables"]["referrals"]["Row"];
 export type B2BLead = Database["public"]["Tables"]["b2b_leads"]["Row"];
-export type UserStreak = Database["public"]["Tables"]["user_streaks"]["Row"];
+export type GoogleToken = Database["public"]["Tables"]["google_tokens"]["Row"];
 export type UserActivityLog = Database["public"]["Tables"]["user_activity_logs"]["Row"];
 export type PushSubscription = Database["public"]["Tables"]["push_subscriptions"]["Row"];

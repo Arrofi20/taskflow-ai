@@ -10,7 +10,7 @@ const steps = [
   {
     title: "Selamat Datang di TaskFlow AI",
     description:
-      "Bukan to-do list biasa — ini adalah AI yang bantu kamu belajar lebih cerdas dengan prioritas otomatis, jadwal belajar personal, dan deadline alert.",
+      "Bukan to-do list biasa — AI yang bantu kamu belajar lebih cerdas.",
     icon: Sparkles,
   },
   {

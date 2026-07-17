@@ -137,6 +137,17 @@ export function AddTaskForm() {
         return;
       }
 
+      // Log activity
+      fetch("/api/activity/history/log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "Tugas dibuat",
+          category: "task",
+          detail: { task_name: values.title.trim(), jenis: values.taskType || "tugas" },
+        }),
+      }).catch(() => {});
+
       router.push("/tugas");
       router.refresh();
     } catch {

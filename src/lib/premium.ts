@@ -13,11 +13,25 @@ export async function getIsPremium(
   // Coba ambil dari tabel users (public)
   const { data: profile } = await supabase
     .from("users")
-    .select("is_premium")
+    .select("is_premium,premium_until")
     .eq("id", userId)
     .single();
 
   if (profile?.is_premium != null) {
+    // Check if trial expired
+    if (profile.is_premium && profile.premium_until) {
+      if (new Date(profile.premium_until) < new Date()) {
+        // Auto-downgrade
+        await supabase
+          .from("users")
+          .update({ is_premium: false, premium_until: null })
+          .eq("id", userId);
+        await supabase.auth.updateUser({
+          data: { is_premium: false, plan: "free", subscription: "free" },
+        });
+        return false;
+      }
+    }
     return profile.is_premium;
   }
 

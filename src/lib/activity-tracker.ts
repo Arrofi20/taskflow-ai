@@ -50,13 +50,15 @@ export function getProductiveHoursLabel(): string {
     .join(", ");
 }
 
-async function syncToServer(logs: ActivityLog[]) {
+export async function syncToServer(logs?: ActivityLog[]) {
   if (typeof window === "undefined") return;
+  const logsToSync = logs ?? getLocalLogs();
+  if (logsToSync.length === 0) return;
   try {
     const res = await fetch("/api/activity", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ logs: logs.map((l) => ({ hour: l.hour })) }),
+      body: JSON.stringify({ logs: logsToSync.map((l) => ({ hour: l.hour })) }),
     });
     if (res.ok) {
       // Kosongkan localStorage setelah sync sukses

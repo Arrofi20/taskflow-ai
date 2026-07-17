@@ -73,9 +73,11 @@ export default async function TugasPage() {
       const taskPriority =
         typeof record.prioritas === "number" ? record.prioritas : null;
       const taskDifficulty =
-        typeof record.tingkat_kesulitan === "string"
-          ? record.tingkat_kesulitan
-          : null;
+        typeof record.tingkat_kesulitan === "number"
+          ? String(record.tingkat_kesulitan)
+          : typeof record.tingkat_kesulitan === "string"
+            ? record.tingkat_kesulitan
+            : null;
       const taskEstimatedHours =
         typeof record.estimasi_waktu === "number"
           ? record.estimasi_waktu

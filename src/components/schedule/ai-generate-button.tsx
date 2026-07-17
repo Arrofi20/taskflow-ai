@@ -21,8 +21,11 @@ type TaskItem = {
   prioritas: number | null;
 };
 
-function buildFreeSlots(selectedDate: string, tasks: TaskItem[]) {
-  // Cari deadline terjauh dari tugas aktif untuk menentukan rentang slot
+function buildFreeSlots(
+  selectedDate: string,
+  tasks: TaskItem[],
+  userFreeTime: Array<{ hari: string; jam_mulai: string; jam_selesai: string }> = [],
+) {
   let maxDays = 7;
 
   if (tasks.length > 0) {
@@ -35,8 +38,28 @@ function buildFreeSlots(selectedDate: string, tasks: TaskItem[]) {
     if (deadlines.length > 0) {
       const farthest = Math.max(...deadlines);
       const diffDays = Math.ceil((farthest - now) / (1000 * 60 * 60 * 24)) + 1;
-      maxDays = Math.max(1, Math.min(diffDays, 14)); // minimal 1 hari, maksimal 14 hari
+      maxDays = Math.max(1, Math.min(diffDays, 14));
     }
+  }
+
+  const dayNameMap: Record<string, number> = {
+    Minggu: 0,
+    Senin: 1,
+    Selasa: 2,
+    Rabu: 3,
+    Kamis: 4,
+    Jumat: 5,
+    Sabtu: 6,
+  };
+
+  // Build lookup from user's configured free time
+  const freeTimeByDay = new Map<number, Array<{ start: string; end: string }>>();
+  for (const ft of userFreeTime) {
+    const dayNum = dayNameMap[ft.hari];
+    if (dayNum === undefined) continue;
+    const existing = freeTimeByDay.get(dayNum) ?? [];
+    existing.push({ start: ft.jam_mulai, end: ft.jam_selesai });
+    freeTimeByDay.set(dayNum, existing);
   }
 
   const slots = [];
@@ -44,17 +67,24 @@ function buildFreeSlots(selectedDate: string, tasks: TaskItem[]) {
   for (let i = 0; i < maxDays; i++) {
     const date = addDays(parseISO(selectedDate), i);
     const day = format(date, "yyyy-MM-dd");
-
-    // Tentukan hari libur dengan asumsi WIB (jam 12 siang)
     const middayWib = new Date(`${day}T12:00:00+07:00`);
     const dayOfWeek = middayWib.getDay();
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-    slots.push({
-      day,
-      start: isWeekend ? "08:00" : "18:00",
-      end: "22:00",
-    });
+    const userSlots = freeTimeByDay.get(dayOfWeek);
+    if (userSlots && userSlots.length > 0) {
+      // Use user's configured free time for this day
+      for (const slot of userSlots) {
+        slots.push({ day, start: slot.start, end: slot.end });
+      }
+    } else {
+      // Fallback to defaults
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      slots.push({
+        day,
+        start: isWeekend ? "08:00" : "18:00",
+        end: "22:00",
+      });
+    }
   }
 
   return slots;
@@ -109,7 +139,13 @@ export function AIGenerateButton({ selectedDate }: AIGenerateButtonProps) {
         return;
       }
 
-      const freeSlots = buildFreeSlots(selectedDate, tasks);
+      // Fetch user's configured free time slots
+      const { data: freeTimeData } = await supabase
+        .from("free_time")
+        .select("hari,jam_mulai,jam_selesai")
+        .eq("user_id", user.id);
+
+      const freeSlots = buildFreeSlots(selectedDate, tasks, freeTimeData ?? []);
 
       const response = await fetch("/api/ai/schedule", {
         method: "POST",

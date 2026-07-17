@@ -154,17 +154,18 @@ export default async function JadwalPage({
         <AIGenerateButton selectedDate={selectedDate} />
       </div>
 
-      <div className="mb-4 flex items-center justify-between rounded-2xl card-vibrant p-3">
+      <div className="mb-4 flex items-center justify-between rounded-2xl card-vibrant p-2 sm:p-3">
         <Link
           href={`/jadwal?date=${format(subDays(selectedDateObject, 1), "yyyy-MM-dd")}`}
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:px-2 sm:text-sm"
         >
           <ChevronLeft className="h-4 w-4" />
-          Sebelumnya
+          <span className="hidden sm:inline">Sebelumnya</span>
+          <span className="sm:hidden">Prev</span>
         </Link>
 
         <div className="text-center">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 sm:text-xs">
             {format(selectedDateObject, "EEEE", { locale: localeId })}
           </p>
           <CalendarFilter selectedDate={selectedDate} />
@@ -172,9 +173,10 @@ export default async function JadwalPage({
 
         <Link
           href={`/jadwal?date=${format(addDays(selectedDateObject, 1), "yyyy-MM-dd")}`}
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:px-2 sm:text-sm"
         >
-          Berikutnya
+          <span className="hidden sm:inline">Berikutnya</span>
+          <span className="sm:hidden">Next</span>
           <ChevronRight className="h-4 w-4" />
         </Link>
       </div>

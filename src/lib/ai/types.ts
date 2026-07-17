@@ -14,6 +14,16 @@ export type PrioritizedTaskResult = {
   risk_percentage: number;
   tingkat_kesulitan: number;
   alasan: string;
+  // Premium fields
+  faktor_analisis?: {
+    deadline_weight: number;
+    jenis_weight: number;
+    estimasi_weight: number;
+    histori_weight: number;
+  };
+  rekomendasi_tindakan?: string;
+  strategi_mitigasi?: string;
+  waktu_pengerjaan_optimal?: string;
 };
 
 export type PrioritizeTasksResponse = {
@@ -55,6 +65,11 @@ export type GeneratedScheduleItem = {
   scheduled_date: string;
   start_time: string;
   end_time: string;
+  rekomendasi_ai?: string;
+  // Premium fields
+  durasi_istirahat?: number;
+  energi_level?: "tinggi" | "sedang" | "rendah";
+  tips_fokus?: string;
 };
 
 export type ScheduleGenerationResponse = {
@@ -64,6 +79,13 @@ export type ScheduleGenerationResponse = {
 export type ScheduleApiResponse = {
   success: true;
   schedules: GeneratedScheduleItem[];
+  // Premium fields
+  analisis_gaya_belajar?: {
+    tipe_belajar: string;
+    jam_optimal: string[];
+    pola_belajar: string;
+  };
+  rekomendasi_umum?: string[];
 };
 
 export type ScheduleApiError = {

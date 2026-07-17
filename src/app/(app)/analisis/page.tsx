@@ -47,6 +47,7 @@ export default function AnalisisPage() {
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
+  const [streakDays, setStreakDays] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -97,6 +98,46 @@ export default function AnalisisPage() {
       if (!error) {
         setTasks((data ?? []) as TaskRow[]);
       }
+
+      // Calculate streak from activity logs
+      const { data: activityLogs } = await supabase
+        .from("user_activity_logs")
+        .select("active_at")
+        .eq("user_id", user.id)
+        .order("active_at", { ascending: false })
+        .limit(100);
+
+      if (activityLogs && activityLogs.length > 0) {
+        const uniqueDays = new Set<string>();
+        for (const log of activityLogs) {
+          const d = new Date(log.active_at);
+          uniqueDays.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+        }
+        const dayMs = 24 * 60 * 60 * 1000;
+        const today = new Date();
+        const todayKey = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+        let streak = 0;
+        let checkDate = new Date(today);
+
+        // Check if today has activity
+        const todayKeyCheck = `${checkDate.getFullYear()}-${checkDate.getMonth()}-${checkDate.getDate()}`;
+        if (!uniqueDays.has(todayKeyCheck)) {
+          // Check yesterday
+          checkDate = new Date(checkDate.getTime() - dayMs);
+        }
+
+        while (true) {
+          const key = `${checkDate.getFullYear()}-${checkDate.getMonth()}-${checkDate.getDate()}`;
+          if (uniqueDays.has(key)) {
+            streak++;
+            checkDate = new Date(checkDate.getTime() - dayMs);
+          } else {
+            break;
+          }
+        }
+        setStreakDays(streak);
+      }
+
       setLoading(false);
     }
 
@@ -189,7 +230,6 @@ export default function AnalisisPage() {
   }, [tasks]);
 
   const totalCompleted = tasks.filter((t) => t.status === "completed").length;
-  const streakDays = 0; // placeholder until streak system is fully wired
 
   if (isPremium === false) {
     return (

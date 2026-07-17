@@ -3,46 +3,61 @@
 import { useEffect } from "react";
 
 import { createClient } from "@/lib/supabase/client";
-import { checkDeadlinesAndNotify, requestNotificationPermission } from "@/lib/notifications";
+
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
 
 export function useDeadlineAlerts() {
   useEffect(() => {
-    const supabase = createClient();
+    if (!("serviceWorker" in navigator) || !VAPID_PUBLIC_KEY) return;
 
-    async function check() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
+    let ignored = false;
 
-      const permission = await requestNotificationPermission();
-      if (permission !== "granted") return;
-
-      // Panggil API alert AI untuk update risk percentage di DB
+    async function subscribe() {
       try {
-        await fetch("/api/ai/alert", { method: "POST" });
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user || ignored) return;
+
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+
+        const sub = subscription.toJSON();
+        if (!sub.endpoint || !sub.keys?.p256dh || !sub.keys?.auth) return;
+
+        await fetch("/api/push/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            endpoint: sub.endpoint,
+            p256dh: sub.keys.p256dh,
+            auth: sub.keys.auth,
+          }),
+        });
       } catch {
-        // Abaikan jika API gagal
-      }
-
-      const now = new Date();
-      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-
-      const { data: tasks } = await supabase
-        .from("tasks")
-        .select("nama_tugas,deadline,status")
-        .eq("user_id", session.user.id)
-        .neq("status", "completed")
-        .gte("deadline", now.toISOString())
-        .lte("deadline", tomorrow.toISOString());
-
-      if (tasks && tasks.length > 0) {
-        checkDeadlinesAndNotify(tasks as { nama_tugas: string; deadline: string; status: string }[]);
+        // Silent fail — push subscription is best-effort
       }
     }
 
-    check();
+    subscribe();
 
-    // Cek setiap 30 menit
-    const interval = setInterval(check, 30 * 60 * 1000);
-    return () => clearInterval(interval);
+    return () => {
+      ignored = true;
+    };
   }, []);
 }

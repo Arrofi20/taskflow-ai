@@ -16,25 +16,30 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f8f9fe] via-[#f0f4ff] to-[#fef9f0] text-slate-800">
       {/* Hero */}
-      <header className="relative overflow-hidden bg-gradient-to-br from-[#1E2761] via-[#1a2a6b] to-[#028090] px-4 py-16 text-white sm:px-8 sm:py-24">
+      <header className="relative overflow-hidden bg-gradient-to-br from-[#1E2761] via-[#1a2a6b] to-[#028090] px-4 py-12 text-white sm:px-8 sm:py-24">
         <div className="absolute inset-0 animate-gradient bg-[length:200%_200%] bg-gradient-to-r from-[#1E2761] via-[#028090] via-[#FF6B6B] to-[#1E2761] opacity-20" />
         <div className="absolute -right-20 -top-20 h-60 w-60 rounded-full bg-white/5" />
         <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-white/5" />
         <div className="relative mx-auto max-w-5xl text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm sm:mb-6 sm:px-4 sm:text-sm">
             <Sparkles size={14} />
             TaskFlow AI
           </div>
-          <h1 className="text-3xl font-bold leading-tight sm:text-5xl lg:text-6xl">
+          <img
+            src="/logo.png"
+            alt="TaskFlow AI Logo"
+            className="mx-auto mb-4 h-16 w-16 rounded-2xl shadow-lg shadow-black/10 sm:mb-6 sm:h-24 sm:w-24"
+          />
+          <h1 className="text-2xl font-bold leading-tight sm:text-5xl lg:text-6xl">
             Bukan to-do list biasa — AI yang tahu mana tugas yang harus kamu kerjain sekarang
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-base text-white/80 sm:text-lg">
+          <p className="mx-auto mt-4 max-w-2xl text-sm text-white/80 sm:mt-6 sm:text-lg">
             Prioritas otomatis, jadwal belajar personal, dan prediksi risiko keterlambatan yang bikin produktivitasmu naik level.
           </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:mt-8 sm:flex-row">
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff6b6b] to-[#ff8e8e] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition hover:scale-105 hover:shadow-xl"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ff6b6b] to-[#ff8e8e] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition hover:scale-105 hover:shadow-xl sm:w-auto"
             >
               Mulai Gratis Sekarang
               <ArrowRight size={16} />
@@ -45,12 +50,12 @@ export default function LandingPage() {
       </header>
 
       {/* Bagaimana cara kerjanya */}
-      <section className="px-4 py-16 sm:px-8">
+      <section className="px-4 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-5xl">
-          <h2 className="text-center text-2xl font-bold text-[#1E2761] sm:text-3xl">
+          <h2 className="text-center text-xl font-bold text-[#1E2761] sm:text-2xl lg:text-3xl">
             Bagaimana cara kerjanya?
           </h2>
-          <div className="mt-10 grid gap-6 sm:grid-cols-3">
+          <div className="mt-8 grid gap-4 sm:mt-10 sm:grid-cols-3 sm:gap-6">
             {[
               {
                 step: "1",
@@ -76,16 +81,16 @@ export default function LandingPage() {
             ].map((item) => (
               <div
                 key={item.step}
-                className="group card-vibrant rounded-3xl p-6 transition hover:-translate-y-1"
+                className="group card-vibrant rounded-3xl p-4 transition hover:-translate-y-1 sm:p-6"
               >
-                <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${item.gradient} text-white shadow-sm transition group-hover:scale-110`}>
-                  <item.icon size={22} />
+                <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${item.gradient} text-white shadow-sm transition group-hover:scale-110 sm:mb-4 sm:h-12 sm:w-12`}>
+                  <item.icon size={20} className="sm:h-[22px] sm:w-[22px]" />
                 </div>
-                <div className="mb-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200 text-xs font-bold text-[#1E2761]">
+                <div className="mb-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200 text-[10px] font-bold text-[#1E2761] sm:h-6 sm:w-6 sm:text-xs">
                   {item.step}
                 </div>
-                <h3 className="text-lg font-bold text-[#1E2761]">{item.title}</h3>
-                <p className="mt-2 text-sm text-slate-500">{item.desc}</p>
+                <h3 className="text-base font-bold text-[#1E2761] sm:text-lg">{item.title}</h3>
+                <p className="mt-2 text-xs text-slate-500 sm:text-sm">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -93,48 +98,48 @@ export default function LandingPage() {
       </section>
 
       {/* Fitur */}
-      <section className="px-4 py-16 sm:px-8">
+      <section className="px-4 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-5xl">
-          <h2 className="text-center text-2xl font-bold text-[#1E2761] sm:text-3xl">
+          <h2 className="text-center text-xl font-bold text-[#1E2761] sm:text-2xl lg:text-3xl">
             Fitur Utama
           </h2>
-          <p className="mt-2 text-center text-sm text-slate-400">
+          <p className="mt-2 text-center text-xs text-slate-400 sm:text-sm">
             Tiga pilar AI untuk mengoptimalkan cara kamu belajar
           </p>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-3">
-            <div className="group card-vibrant rounded-3xl p-6 transition hover:-translate-y-1">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#1E2761] to-[#2a3675] text-white shadow-sm transition group-hover:scale-110">
-                <Sparkles size={22} />
+          <div className="mt-8 grid gap-4 sm:mt-10 sm:grid-cols-3 sm:gap-6">
+            <div className="group card-vibrant rounded-3xl p-4 transition hover:-translate-y-1 sm:p-6">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#1E2761] to-[#2a3675] text-white shadow-sm transition group-hover:scale-110 sm:mb-4 sm:h-12 sm:w-12">
+                <Sparkles size={20} className="sm:h-[22px] sm:w-[22px]" />
               </div>
-              <h3 className="text-lg font-bold text-[#1E2761]">
+              <h3 className="text-base font-bold text-[#1E2761] sm:text-lg">
                 AI Task Prioritization
               </h3>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-xs text-slate-500 sm:text-sm">
                 AI menganalisis deadline, jenis tugas, dan histori untuk menghasilkan skor prioritas 0-100 secara real-time.
               </p>
             </div>
 
-            <div className="group card-vibrant rounded-3xl p-6 transition hover:-translate-y-1">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#028090] to-[#03a3b5] text-white shadow-sm transition group-hover:scale-110">
-                <CalendarDays size={22} />
+            <div className="group card-vibrant rounded-3xl p-4 transition hover:-translate-y-1 sm:p-6">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#028090] to-[#03a3b5] text-white shadow-sm transition group-hover:scale-110 sm:mb-4 sm:h-12 sm:w-12">
+                <CalendarDays size={20} className="sm:h-[22px] sm:w-[22px]" />
               </div>
-              <h3 className="text-lg font-bold text-[#1E2761]">
+              <h3 className="text-base font-bold text-[#1E2761] sm:text-lg">
                 AI Study Schedule
               </h3>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-xs text-slate-500 sm:text-sm">
                 Jadwal belajar otomatis berdasarkan jam produktif historismu dan slot waktu kosong yang kamu atur.
               </p>
             </div>
 
-            <div className="group card-vibrant rounded-3xl p-6 transition hover:-translate-y-1">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#ff6b6b] to-[#ff8e8e] text-white shadow-sm transition group-hover:scale-110">
-                <Bell size={22} />
+            <div className="group card-vibrant rounded-3xl p-4 transition hover:-translate-y-1 sm:p-6">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#ff6b6b] to-[#ff8e8e] text-white shadow-sm transition group-hover:scale-110 sm:mb-4 sm:h-12 sm:w-12">
+                <Bell size={20} className="sm:h-[22px] sm:w-[22px]" />
               </div>
-              <h3 className="text-lg font-bold text-[#1E2761]">
+              <h3 className="text-base font-bold text-[#1E2761] sm:text-lg">
                 AI Deadline Alert
               </h3>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-xs text-slate-500 sm:text-sm">
                 Prediksi probabilitas keterlambatan per tugas. Alert proaktif muncul jauh sebelum deadline saat risiko &gt; 70%.
               </p>
             </div>
@@ -150,37 +155,37 @@ export default function LandingPage() {
           </h2>
 
           <div className="mt-10 overflow-hidden rounded-3xl card-vibrant">
-            <div className="grid grid-cols-3 border-b border-[#1E2761]/8 bg-gradient-to-r from-[#f0f4ff] to-[#fef9f0] px-4 py-3 text-sm font-semibold text-slate-700">
+            <div className="grid grid-cols-3 border-b border-[#1E2761]/8 bg-gradient-to-r from-[#f0f4ff] to-[#fef9f0] px-3 py-3 text-xs font-semibold text-slate-700 sm:px-4 sm:text-sm">
               <div>Fitur</div>
-              <div className="text-center">To-Do List Biasa</div>
-              <div className="text-center text-[#028090]">TaskFlow AI</div>
+              <div className="text-center">Biasa</div>
+              <div className="text-center text-[#028090]">TaskFlow</div>
             </div>
             {[
-              ["Skor prioritas 0-100", false, true],
-              ["Prediksi risiko telat", false, true],
-              ["Jadwal belajar AI", false, true],
-              ["Jam produktif personal", false, true],
+              ["Prioritas AI 0-100", false, true],
+              ["Prediksi risiko", false, true],
+              ["Jadwal AI", false, true],
+              ["Jam produktif", false, true],
               ["Alert proaktif", false, true],
               ["Analisis produktivitas", false, true],
               ["Gratis", true, true],
             ].map(([feature, basic, tf]) => (
               <div
                 key={String(feature)}
-                className="grid grid-cols-3 border-b border-[#1E2761]/5 px-4 py-3 text-sm last:border-0"
+                className="grid grid-cols-3 border-b border-[#1E2761]/5 px-3 py-2.5 text-xs last:border-0 sm:px-4 sm:py-3 sm:text-sm"
               >
                 <div className="text-slate-700">{String(feature)}</div>
                 <div className="flex justify-center">
                   {basic ? (
-                    <CheckCircle2 size={18} className="text-[#6bcb77]" />
+                    <CheckCircle2 size={16} className="text-[#6bcb77] sm:h-[18px] sm:w-[18px]" />
                   ) : (
-                    <XCircle size={18} className="text-slate-200" />
+                    <XCircle size={16} className="text-slate-200 sm:h-[18px] sm:w-[18px]" />
                   )}
                 </div>
                 <div className="flex justify-center">
                   {tf ? (
-                    <CheckCircle2 size={18} className="text-[#028090]" />
+                    <CheckCircle2 size={16} className="text-[#028090] sm:h-[18px] sm:w-[18px]" />
                   ) : (
-                    <XCircle size={18} className="text-slate-200" />
+                    <XCircle size={16} className="text-slate-200 sm:h-[18px] sm:w-[18px]" />
                   )}
                 </div>
               </div>
@@ -190,24 +195,24 @@ export default function LandingPage() {
       </section>
 
       {/* Social proof + CTA */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#1E2761] via-[#1a2a6b] to-[#028090] px-4 py-16 text-white sm:px-8 sm:py-24">
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#1E2761] via-[#1a2a6b] to-[#028090] px-4 py-12 text-white sm:px-8 sm:py-24">
         <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/5" />
         <div className="absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-white/5" />
         <div className="relative mx-auto max-w-4xl text-center">
-          <div className="mb-6 flex items-center justify-center gap-2">
-            <ShieldCheck size={20} />
-            <span className="text-sm font-medium opacity-80">Digunakan oleh mahasiswa di seluruh Indonesia</span>
+          <div className="mb-4 flex items-center justify-center gap-2 sm:mb-6">
+            <ShieldCheck size={18} className="sm:h-5 sm:w-5" />
+            <span className="text-xs font-medium opacity-80 sm:text-sm">Digunakan oleh mahasiswa di seluruh Indonesia</span>
           </div>
-          <h2 className="text-2xl font-bold sm:text-4xl">
+          <h2 className="text-xl font-bold sm:text-2xl lg:text-4xl">
             Siap naik level produktivitasmu?
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base opacity-80">
+          <p className="mx-auto mt-3 max-w-xl text-sm opacity-80 sm:mt-4 sm:text-base">
             Bergabung dengan ribuan mahasiswa yang sudah menggunakan TaskFlow AI untuk mengatur tugas dan jadwal belajar.
           </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:mt-8 sm:flex-row">
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff6b6b] to-[#ff8e8e] px-8 py-4 text-sm font-bold text-white shadow-lg transition hover:scale-105 hover:shadow-xl"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ff6b6b] to-[#ff8e8e] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition hover:scale-105 hover:shadow-xl sm:w-auto sm:px-8 sm:py-4"
             >
               Mulai Gratis Sekarang
               <ArrowRight size={16} />
