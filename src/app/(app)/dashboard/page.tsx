@@ -35,7 +35,9 @@ export default async function DashboardPage() {
   const hourCounts = new Map<number, number>();
   (activityLogs ?? []).forEach((log) => {
     const hour = new Date(log.active_at).getHours();
-    hourCounts.set(hour, (hourCounts.get(hour) ?? 0) + 1);
+    if (hour >= 6 && hour <= 23) {
+      hourCounts.set(hour, (hourCounts.get(hour) ?? 0) + 1);
+    }
   });
   const productiveHours = Array.from(hourCounts.entries())
     .sort((a, b) => b[1] - a[1])
@@ -68,7 +70,7 @@ export default async function DashboardPage() {
           {productiveHours.length > 0 && (
             <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-medium text-white/90 backdrop-blur-sm">
               <span className="h-2 w-2 animate-pulse rounded-full bg-[#6bcb77]" />
-              Jam Produktifmu: {productiveHours.map((h) => `${String(h).padStart(2, "0")}:00`).join(", ")}
+              Jam Produktifmu: {productiveHours.map((h) => `${String(h).padStart(2, "0")}.00`).join(", ")}
             </div>
           )}
         </div>

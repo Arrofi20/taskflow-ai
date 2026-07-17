@@ -35,18 +35,19 @@ export function getProductiveHours(): number[] {
   const logs = getLocalLogs();
   const hourCounts = new Map<number, number>();
   for (const entry of logs) {
-    hourCounts.set(entry.hour, (hourCounts.get(entry.hour) ?? 0) + 1);
+    if (entry.hour >= 6 && entry.hour <= 23) {
+      hourCounts.set(entry.hour, (hourCounts.get(entry.hour) ?? 0) + 1);
+    }
   }
   const sorted = Array.from(hourCounts.entries()).sort((a, b) => b[1] - a[1]);
-  // Ambil top 3 jam paling sering
   return sorted.slice(0, 3).map(([hour]) => hour);
 }
 
 export function getProductiveHoursLabel(): string {
-  const hours = getProductiveHours();
+  const hours = getProductiveHours().filter((h) => h >= 6 && h <= 23);
   if (hours.length === 0) return "Belum ada data";
   return hours
-    .map((h) => `${String(h).padStart(2, "0")}:00`)
+    .map((h) => `${String(h).padStart(2, "0")}.00`)
     .join(", ");
 }
 
