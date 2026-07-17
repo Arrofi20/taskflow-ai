@@ -25,6 +25,7 @@ import {
   Check,
   Loader2,
   ExternalLink,
+  Download,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -274,6 +275,14 @@ export default function KalenderPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => window.open("/api/kalender/export", "_blank")}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#028090]/30 bg-[#028090]/10 px-3 py-2 text-xs font-medium text-[#028090] shadow-sm hover:bg-[#028090]/15"
+            >
+              <Download size={14} />
+              Export ICS
+            </button>
             {googleConnected ? (
               <>
                 <span className="inline-flex items-center gap-1 rounded-lg bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
